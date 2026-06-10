@@ -123,6 +123,7 @@ export class GeomRenderer {
         // 不交换，直接使用数学坐标
         mesh.position.set(x, y, z);
         mesh.userData.objectName = obj.name;
+        mesh.userData.objectType = 'point';
 
         // 使用 LabelRenderer 创建标签
         if (this.labelRenderer) {
