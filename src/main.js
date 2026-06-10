@@ -15,11 +15,15 @@ import { Picker } from './interaction/picker.js';
 import { Selector } from './interaction/selector.js';
 import { Dragger } from './interaction/dragger.js';
 import { ToolManager } from './interaction/toolManager.js';
+import { HistoryManager } from './geometry/history.js';
+import { StorageManager } from './storage.js';
 
 // ===== 初始化 =====
 const sceneManager = new SceneManager();
 const store = new ObjectStore(bus);
-const executor = new Executor(store, bus);
+const history = new HistoryManager(store, bus);
+const storage = new StorageManager(store, bus);
+const executor = new Executor(store, bus, history);
 
 // 标签渲染器
 const viewport = document.getElementById('viewport');
@@ -195,6 +199,12 @@ function bindUI() {
             input.value = '';
             input.style.height = 'auto';
         }
+
+        // Tab 补全
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            autoComplete(input);
+        }
     });
 
     // 自动调整高度
@@ -333,6 +343,43 @@ function bindUI() {
                 sceneManager.toggleProjection();
                 break;
         }
+
+        // Ctrl+Z 撤销，Ctrl+Y 重做
+        if (e.ctrlKey || e.metaKey) {
+            if (e.key === 'z' || e.key === 'Z') {
+                e.preventDefault();
+                history.undo();
+            } else if (e.key === 'y' || e.key === 'Y') {
+                e.preventDefault();
+                history.redo();
+            } else if (e.key === 's' || e.key === 'S') {
+                // Ctrl+S 保存文件
+                e.preventDefault();
+                storage.saveToFile();
+            } else if (e.key === 'o' || e.key === 'O') {
+                // Ctrl+O 加载文件
+                e.preventDefault();
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.json';
+                input.onchange = async (e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                        try {
+                            await storage.loadFromFile(file);
+                            console.log('项目加载成功');
+                        } catch (err) {
+                            console.error('加载失败:', err);
+                        }
+                    }
+                };
+                input.click();
+            } else if (e.key === 'p' || e.key === 'P') {
+                // Ctrl+P 导出 PNG
+                e.preventDefault();
+                sceneManager.exportPNG();
+            }
+        }
     });
 
     // 监听选择变化事件
@@ -384,8 +431,66 @@ function updateToolButtons(tool) {
     });
 }
 
+// Tab 补全
+function autoComplete(input) {
+    const value = input.value;
+    const cursorPos = input.selectionStart;
+
+    // 获取光标前的文本
+    const textBeforeCursor = value.substring(0, cursorPos);
+
+    // 匹配最后一个标识符
+    const match = textBeforeCursor.match(/[A-Za-z_][A-Za-z0-9_]*$/);
+    if (!match) return;
+
+    const partial = match[0];
+    const startPos = cursorPos - partial.length;
+
+    // 获取所有可能的补全项
+    const candidates = [];
+
+    // 对象名称
+    store.getNames().forEach(name => {
+        if (name.startsWith(partial)) {
+            candidates.push(name);
+        }
+    });
+
+    // 命令名称
+    const commands = ['Point', 'Segment', 'Line', 'Ray', 'Triangle', 'Polygon', 'Plane',
+                      'Midpoint', 'Fold', 'Reflect', 'Distance',
+                      'Color', 'Dash', 'Opacity', 'Hide', 'Show', 'Label',
+                      'Delete', 'Undo', 'Redo', 'Clear', 'Grid', 'Axis'];
+    commands.forEach(cmd => {
+        if (cmd.toLowerCase().startsWith(partial.toLowerCase())) {
+            candidates.push(cmd);
+        }
+    });
+
+    if (candidates.length === 0) return;
+
+    // 找到公共前缀
+    let commonPrefix = candidates[0];
+    for (let i = 1; i < candidates.length; i++) {
+        while (!candidates[i].startsWith(commonPrefix)) {
+            commonPrefix = commonPrefix.slice(0, -1);
+        }
+    }
+
+    // 补全
+    const completion = commonPrefix.slice(partial.length);
+    input.value = value.substring(0, startPos) + partial + completion + value.substring(cursorPos);
+    input.selectionStart = input.selectionEnd = cursorPos + completion.length;
+}
+
 // ===== 启动 =====
 bindUI();
+
+// 尝试从 localStorage 恢复
+const savedData = storage.loadFromLocalStorage();
+if (savedData) {
+    console.log('已从自动保存恢复');
+}
 
 // 将 labelRenderer 传递给 sceneManager 用于渲染循环
 sceneManager.labelRenderer = labelRenderer;

@@ -261,6 +261,22 @@ export class SceneManager {
         this.grid.visible = !this.grid.visible;
     }
 
+    /** 导出 PNG */
+    exportPNG(filename = 'geometry.png') {
+        // 渲染一帧
+        this.renderer.render(this.scene, this.camera);
+
+        // 获取 canvas 数据
+        const canvas = this.renderer.domElement;
+        const dataURL = canvas.toDataURL('image/png');
+
+        // 创建下载链接
+        const link = document.createElement('a');
+        link.download = filename;
+        link.href = dataURL;
+        link.click();
+    }
+
     /** 切换投影方式 */
     toggleProjection() {
         const aspect = this.canvas.clientWidth / this.canvas.clientHeight;

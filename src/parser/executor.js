@@ -6,9 +6,10 @@
 import * as calc from '../geometry/calc.js';
 
 export class Executor {
-    constructor(store, bus) {
+    constructor(store, bus, history) {
         this.store = store;
         this.bus = bus;
+        this.history = history;
 
         // 命令注册表
         this.commands = new Map();
@@ -526,12 +527,18 @@ export class Executor {
 
     /** Undo */
     cmdUndo() {
+        if (this.history) {
+            this.history.undo();
+        }
         this.bus.emit('command:undo');
         return { type: 'command', name: 'Undo' };
     }
 
     /** Redo */
     cmdRedo() {
+        if (this.history) {
+            this.history.redo();
+        }
         this.bus.emit('command:redo');
         return { type: 'command', name: 'Redo' };
     }
