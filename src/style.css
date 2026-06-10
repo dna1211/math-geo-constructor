@@ -61,6 +61,8 @@ body {
     align-items: center;
     padding: 8px 0;
     gap: 4px;
+    position: relative;
+    z-index: 10;
 }
 
 .tool-btn {

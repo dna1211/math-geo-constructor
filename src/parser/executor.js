@@ -22,7 +22,7 @@ export class Executor {
      */
     registerBuiltinCommands() {
         // 构造类
-        this.registerCommand('Point', { minArgs: 1, maxArgs: 1, handler: this.cmdPoint.bind(this) });
+        this.registerCommand('Point', { minArgs: 1, maxArgs: 3, handler: this.cmdPoint.bind(this) });
         this.registerCommand('Segment', { minArgs: 2, maxArgs: 2, handler: this.cmdSegment.bind(this) });
         this.registerCommand('Line', { minArgs: 2, maxArgs: 2, handler: this.cmdLine.bind(this) });
         this.registerCommand('Ray', { minArgs: 2, maxArgs: 2, handler: this.cmdRay.bind(this) });
@@ -38,7 +38,7 @@ export class Executor {
 
         // 构造类（高级）
         this.registerCommand('RegularPolygon', { minArgs: 4, maxArgs: 4, handler: this.cmdRegularPolygon.bind(this) });
-        this.registerCommand('EquilateralTriangle', { minArgs: 4, maxArgs: 4, handler: this.cmdEquilateralTriangle.bind(this) });
+        this.registerCommand('EquilateralTriangle', { minArgs: 3, maxArgs: 3, handler: this.cmdEquilateralTriangle.bind(this) });
 
         // 样式类
         this.registerCommand('Color', { minArgs: 2, maxArgs: 2, handler: this.cmdColor.bind(this) });
@@ -271,18 +271,25 @@ export class Executor {
 
     // ===== 内置命令实现 =====
 
-    /** Point(x, y, z) 或 Point([x, y, z]) */
+    /** Point(x, y, z) 或 Point([x, y, z]) 或 Point(x) */
     cmdPoint(args) {
-        const arg = args[0];
-        if (Array.isArray(arg)) {
-            const [x = 0, y = 0, z = 0] = arg;
+        // 支持 Point([x, y, z]) 语法
+        if (args.length === 1 && Array.isArray(args[0])) {
+            const [x = 0, y = 0, z = 0] = args[0];
             return { type: 'point', data: { x, y, z } };
         }
-        if (typeof arg === 'number') {
-            return { type: 'point', data: { x: arg, y: 0, z: 0 } };
+        // 支持 Point(x) 语法
+        if (args.length === 1 && typeof args[0] === 'number') {
+            return { type: 'point', data: { x: args[0], y: 0, z: 0 } };
         }
-        if (arg?.type === 'point') {
-            return arg;
+        // 支持 Point(x, y, z) 语法
+        if (args.length === 3 && args.every(a => typeof a === 'number')) {
+            const [x = 0, y = 0, z = 0] = args;
+            return { type: 'point', data: { x, y, z } };
+        }
+        // 支持 Point(pointObj) 语法
+        if (args.length === 1 && args[0]?.type === 'point') {
+            return args[0];
         }
         throw new Error('Point 参数错误');
     }

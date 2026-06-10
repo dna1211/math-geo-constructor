@@ -3,6 +3,7 @@
  * 组装各模块，绑定 UI 事件
  */
 
+import * as THREE from 'three';
 import { SceneManager } from './render/scene.js';
 import { GeomRenderer } from './render/geomRenderer.js';
 import { LabelRenderer } from './render/labelRenderer.js';
@@ -187,6 +188,7 @@ function bindUI() {
 
     // 清空按钮
     btnClear.addEventListener('click', () => {
+        executeCommand('Clear');
         input.value = '';
         input.style.height = 'auto';
         input.focus();
@@ -263,6 +265,14 @@ function bindUI() {
                     // 禁用 OrbitControls
                     sceneManager.controls.enabled = false;
                 }
+            } else if (toolManager.isPlacingPoint()) {
+                // 画点模式 - 点击已有对象时，取其中心点
+                const obj = store.get(name);
+                if (obj && obj.type === 'point') {
+                    // 点击已有点，选择它
+                    selector.select(name);
+                    updateProperties(name);
+                }
             } else if (toolManager.isDrawingLine()) {
                 // 画线模式
                 toolManager.addTempData(name);
@@ -280,6 +290,13 @@ function bindUI() {
             if (toolManager.isIdle()) {
                 selector.clearSelection();
                 updateProperties(null);
+            } else if (toolManager.isPlacingPoint()) {
+                // 画点模式 - 点击空白处，在鼠标位置创建点
+                const ndc = Picker.screenToNDC(e.clientX, e.clientY, canvas);
+                // 将 NDC 坐标转换为世界坐标（在 Z=0 平面上）
+                const worldPos = ndcToWorld(ndc.x, ndc.y);
+                const pointName = `P${store.size() + 1}`;
+                executeCommand(`${pointName} = Point(${worldPos.x.toFixed(2)}, ${worldPos.y.toFixed(2)}, 0)`);
             }
         }
     });
@@ -452,6 +469,19 @@ function updateToolButtons(tool) {
     document.querySelectorAll('.tool-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.tool === tool);
     });
+}
+
+// NDC 坐标转世界坐标（在 Z=0 平面上）
+function ndcToWorld(ndcX, ndcY) {
+    const camera = sceneManager.camera;
+    const vector = new THREE.Vector3(ndcX, ndcY, 0.5);
+    vector.unproject(camera);
+
+    const dir = vector.sub(camera.position).normalize();
+    const distance = -camera.position.z / dir.z;
+    const pos = camera.position.clone().add(dir.multiplyScalar(distance));
+
+    return { x: pos.x, y: pos.y };
 }
 
 // Tab 补全

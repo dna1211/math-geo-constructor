@@ -1,0 +1,9 @@
+{
+  "skills": [
+    {
+      "name": "generate-geometry",
+      "path": ".claude/skills/generate-geometry.md",
+      "description": "生成常见几何体的命令序列"
+    }
+  ]
+}
