@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D 几何构造工具</title>
+    <link rel="stylesheet" href="/src/style.css">
+</head>
+<body>
+    <!-- 标题栏 -->
+    <header id="header">
+        <h1>3D 几何构造工具</h1>
+    </header>
+
+    <!-- 主内容区 -->
+    <main id="app">
+        <!-- 左侧工具栏 -->
+        <aside id="toolbar">
+            <button class="tool-btn active" data-tool="select" title="选择 (V)">
+                <span class="icon">🔘</span>
+                <span class="label">选择</span>
+            </button>
+            <button class="tool-btn" data-tool="point" title="画点 (P)">
+                <span class="icon">•</span>
+                <span class="label">点</span>
+            </button>
+            <button class="tool-btn" data-tool="line" title="画线 (L)">
+                <span class="icon">╱</span>
+                <span class="label">线</span>
+            </button>
+            <button class="tool-btn" data-tool="polygon" title="画面 (T)">
+                <span class="icon">△</span>
+                <span class="label">面</span>
+            </button>
+            <button class="tool-btn" data-tool="drag" title="拖拽 (H)">
+                <span class="icon">✋</span>
+                <span class="label">拖拽</span>
+            </button>
+        </aside>
+
+        <!-- 中间 3D 视口 -->
+        <section id="viewport">
+            <canvas id="canvas"></canvas>
+        </section>
+
+        <!-- 右侧属性面板 -->
+        <aside id="properties">
+            <h3>属性面板</h3>
+            <div id="prop-content">
+                <p class="placeholder">选择对象查看属性</p>
+            </div>
+        </aside>
+    </main>
+
+    <!-- 底部命令面板 -->
+    <footer id="command-panel">
+        <div class="command-input-row">
+            <textarea id="command-input" placeholder="输入命令，如: A = (0, 0, 0)" rows="1"></textarea>
+            <button id="btn-execute">执行</button>
+            <button id="btn-clear">清空</button>
+        </div>
+        <div id="command-feedback"></div>
+        <div class="command-hints">
+            Enter执行 · ↑↓翻阅历史 · Tab补全 · Esc取消
+        </div>
+    </footer>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>
