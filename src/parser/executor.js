@@ -3,6 +3,8 @@
  * 执行 AST 节点，调用几何操作函数
  */
 
+import * as calc from '../geometry/calc.js';
+
 export class Executor {
     constructor(store, bus) {
         this.store = store;
@@ -20,10 +22,28 @@ export class Executor {
         // 构造类
         this.registerCommand('Point', { minArgs: 1, maxArgs: 1, handler: this.cmdPoint.bind(this) });
         this.registerCommand('Segment', { minArgs: 2, maxArgs: 2, handler: this.cmdSegment.bind(this) });
+        this.registerCommand('Line', { minArgs: 2, maxArgs: 2, handler: this.cmdLine.bind(this) });
+        this.registerCommand('Ray', { minArgs: 2, maxArgs: 2, handler: this.cmdRay.bind(this) });
         this.registerCommand('Triangle', { minArgs: 3, maxArgs: 3, handler: this.cmdTriangle.bind(this) });
         this.registerCommand('Polygon', { minArgs: 3, maxArgs: Infinity, handler: this.cmdPolygon.bind(this) });
+        this.registerCommand('Plane', { minArgs: 1, maxArgs: 3, handler: this.cmdPlane.bind(this) });
+
+        // 计算类
+        this.registerCommand('Midpoint', { minArgs: 2, maxArgs: 2, handler: this.cmdMidpoint.bind(this) });
+        this.registerCommand('Fold', { minArgs: 3, maxArgs: 3, handler: this.cmdFold.bind(this) });
+        this.registerCommand('Reflect', { minArgs: 2, maxArgs: 2, handler: this.cmdReflect.bind(this) });
+        this.registerCommand('Distance', { minArgs: 2, maxArgs: 2, handler: this.cmdDistance.bind(this) });
+
+        // 样式类
+        this.registerCommand('Color', { minArgs: 2, maxArgs: 2, handler: this.cmdColor.bind(this) });
+        this.registerCommand('Dash', { minArgs: 1, maxArgs: 2, handler: this.cmdDash.bind(this) });
+        this.registerCommand('Opacity', { minArgs: 2, maxArgs: 2, handler: this.cmdOpacity.bind(this) });
+        this.registerCommand('Hide', { minArgs: 1, maxArgs: 1, handler: this.cmdHide.bind(this) });
+        this.registerCommand('Show', { minArgs: 1, maxArgs: 1, handler: this.cmdShow.bind(this) });
+        this.registerCommand('Label', { minArgs: 2, maxArgs: 2, handler: this.cmdLabel.bind(this) });
 
         // 操作类
+        this.registerCommand('Delete', { minArgs: 1, maxArgs: 1, handler: this.cmdDelete.bind(this) });
         this.registerCommand('Undo', { minArgs: 0, maxArgs: 0, handler: this.cmdUndo.bind(this) });
         this.registerCommand('Redo', { minArgs: 0, maxArgs: 0, handler: this.cmdRedo.bind(this) });
         this.registerCommand('Clear', { minArgs: 0, maxArgs: 0, handler: this.cmdClear.bind(this) });
@@ -301,6 +321,207 @@ export class Executor {
             data: { points: names },
             parents: names
         };
+    }
+
+    /** Line(A, B) - 无限直线 */
+    cmdLine(args) {
+        const [from, to] = args;
+        if (!from?.name || !to?.name) {
+            throw new Error('Line 需要两个点对象');
+        }
+        return {
+            type: 'line',
+            data: { from: from.name, to: to.name },
+            parents: [from.name, to.name]
+        };
+    }
+
+    /** Ray(A, B) - 射线 */
+    cmdRay(args) {
+        const [origin, through] = args;
+        if (!origin?.name || !through?.name) {
+            throw new Error('Ray 需要两个点对象');
+        }
+        return {
+            type: 'ray',
+            data: { origin: origin.name, through: through.name },
+            parents: [origin.name, through.name]
+        };
+    }
+
+    /** Plane(A, B, C) 或 Plane(a, b, c, d) */
+    cmdPlane(args) {
+        if (args.length === 3) {
+            // 三点确定平面
+            const names = args.map(a => {
+                if (!a?.name) throw new Error('Plane 需要三个点对象');
+                return a.name;
+            });
+            return {
+                type: 'plane',
+                data: { points: names },
+                parents: names
+            };
+        } else if (args.length === 4) {
+            // 平面方程 ax + by + cz + d = 0
+            const [a, b, c, d] = args.map(v => {
+                if (typeof v !== 'number') throw new Error('Plane 方程参数必须是数字');
+                return v;
+            });
+            return {
+                type: 'plane',
+                data: { a, b, c, d },
+                parents: []
+            };
+        }
+        throw new Error('Plane 需要 3 个点或 4 个数字（方程参数）');
+    }
+
+    /** Midpoint(A, B) */
+    cmdMidpoint(args) {
+        const [p1, p2] = args;
+        if (!p1?.data || !p2?.data) {
+            throw new Error('Midpoint 需要两个点对象');
+        }
+        const mid = calc.midpoint(p1.data, p2.data);
+        return {
+            type: 'point',
+            data: mid,
+            parents: [p1.name, p2.name]
+        };
+    }
+
+    /** Fold(P, Line(A,B), angle) */
+    cmdFold(args) {
+        const [point, axis, angle] = args;
+        if (!point?.data) throw new Error('Fold 第一个参数需要是点');
+        if (!axis?.data) throw new Error('Fold 第二个参数需要是线');
+        if (typeof angle !== 'number') throw new Error('Fold 第三个参数需要是角度');
+
+        let axisData;
+        if (axis.type === 'line' || axis.type === 'segment') {
+            const from = this.store.get(axis.data.from);
+            const to = this.store.get(axis.data.to);
+            if (!from || !to) throw new Error('轴线端点不存在');
+            axisData = { from: from.data, to: to.data };
+        } else {
+            throw new Error('Fold 第二个参数需要是线段或直线');
+        }
+
+        const result = calc.fold(point.data, axisData, angle);
+        return {
+            type: 'point',
+            data: result,
+            parents: [point.name, axis.name]
+        };
+    }
+
+    /** Reflect(P, Line(A,B)) 或 Reflect(P, Plane(...)) */
+    cmdReflect(args) {
+        const [point, target] = args;
+        if (!point?.data) throw new Error('Reflect 第一个参数需要是点');
+
+        if (target.type === 'line' || target.type === 'segment') {
+            // 关于线对称
+            const from = this.store.get(target.data.from);
+            const to = this.store.get(target.data.to);
+            if (!from || !to) throw new Error('对称轴端点不存在');
+            const axisData = { from: from.data, to: to.data };
+            const result = calc.reflectLine(point.data, axisData);
+            return {
+                type: 'point',
+                data: result,
+                parents: [point.name, target.name]
+            };
+        } else if (target.type === 'plane') {
+            // 关于平面对称
+            let planeData;
+            if (target.data.points) {
+                const points = target.data.points.map(name => {
+                    const p = this.store.get(name);
+                    if (!p) throw new Error(`平面点 ${name} 不存在`);
+                    return p.data;
+                });
+                planeData = { points };
+            } else {
+                planeData = target.data;
+            }
+            const result = calc.reflectPlane(point.data, planeData);
+            return {
+                type: 'point',
+                data: result,
+                parents: [point.name, target.name]
+            };
+        }
+
+        throw new Error('Reflect 第二个参数需要是线或平面');
+    }
+
+    /** Distance(A, B) */
+    cmdDistance(args) {
+        const [p1, p2] = args;
+        if (!p1?.data || !p2?.data) {
+            throw new Error('Distance 需要两个点对象');
+        }
+        const d = calc.distance(p1.data, p2.data);
+        return d;  // 返回数字
+    }
+
+    /** Color(obj, color) */
+    cmdColor(args) {
+        const [obj, color] = args;
+        if (!obj?.name) throw new Error('Color 第一个参数需要是对象');
+        this.store.update(obj.name, { style: { color } });
+        return { type: 'command', name: 'Color' };
+    }
+
+    /** Dash(obj, true/false) */
+    cmdDash(args) {
+        const [obj, enabled = true] = args;
+        if (!obj?.name) throw new Error('Dash 第一个参数需要是对象');
+        this.store.update(obj.name, { style: { dash: enabled } });
+        return { type: 'command', name: 'Dash' };
+    }
+
+    /** Opacity(obj, value) */
+    cmdOpacity(args) {
+        const [obj, opacity] = args;
+        if (!obj?.name) throw new Error('Opacity 第一个参数需要是对象');
+        if (typeof opacity !== 'number') throw new Error('Opacity 第二个参数需要是数字');
+        this.store.update(obj.name, { style: { opacity } });
+        return { type: 'command', name: 'Opacity' };
+    }
+
+    /** Hide(obj) */
+    cmdHide(args) {
+        const [obj] = args;
+        if (!obj?.name) throw new Error('Hide 需要一个对象');
+        this.store.update(obj.name, { style: { visible: false } });
+        return { type: 'command', name: 'Hide' };
+    }
+
+    /** Show(obj) */
+    cmdShow(args) {
+        const [obj] = args;
+        if (!obj?.name) throw new Error('Show 需要一个对象');
+        this.store.update(obj.name, { style: { visible: true } });
+        return { type: 'command', name: 'Show' };
+    }
+
+    /** Label(obj, text) */
+    cmdLabel(args) {
+        const [obj, text] = args;
+        if (!obj?.name) throw new Error('Label 第一个参数需要是对象');
+        this.store.update(obj.name, { style: { label: text } });
+        return { type: 'command', name: 'Label' };
+    }
+
+    /** Delete(obj) */
+    cmdDelete(args) {
+        const [obj] = args;
+        if (!obj?.name) throw new Error('Delete 需要一个对象');
+        this.store.unregister(obj.name);
+        return { type: 'command', name: 'Delete' };
     }
 
     /** Undo */

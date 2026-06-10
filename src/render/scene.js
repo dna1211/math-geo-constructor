@@ -228,6 +228,11 @@ export class SceneManager {
         requestAnimationFrame(() => this.animate());
         this.controls.update();
         this.renderer.render(this.scene, this.camera);
+
+        // 渲染标签（如果有 labelRenderer）
+        if (this.labelRenderer) {
+            this.labelRenderer.render();
+        }
     }
 
     /** 手动触发渲染 */

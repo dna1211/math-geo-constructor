@@ -6,10 +6,11 @@
 import * as THREE from 'three';
 
 export class GeomRenderer {
-    constructor(scene, store, bus) {
+    constructor(scene, store, bus, labelRenderer) {
         this.scene = scene;
         this.store = store;
         this.bus = bus;
+        this.labelRenderer = labelRenderer;
 
         // 监听对象事件
         this.bus.on('object:created', ({ name, obj }) => this.renderCreate(obj));
@@ -31,11 +32,20 @@ export class GeomRenderer {
             case 'segment':
                 mesh = this.createSegment(obj);
                 break;
+            case 'line':
+                mesh = this.createLine(obj);
+                break;
+            case 'ray':
+                mesh = this.createRay(obj);
+                break;
             case 'triangle':
                 mesh = this.createTriangle(obj);
                 break;
             case 'polygon':
                 mesh = this.createPolygon(obj);
+                break;
+            case 'plane':
+                mesh = this.createPlane(obj);
                 break;
             default:
                 console.warn(`未知的对象类型: ${obj.type}`);
@@ -66,6 +76,11 @@ export class GeomRenderer {
             this.disposeObject(obj.renderRef);
             obj.renderRef = null;
         }
+
+        // 删除标签
+        if (this.labelRenderer) {
+            this.labelRenderer.removeLabel(obj.name);
+        }
     }
 
     /**
@@ -82,6 +97,11 @@ export class GeomRenderer {
             this.scene.remove(obj);
             this.disposeObject(obj);
         });
+
+        // 清空标签
+        if (this.labelRenderer) {
+            this.labelRenderer.clearAll();
+        }
     }
 
     /**
@@ -89,10 +109,10 @@ export class GeomRenderer {
      * 数学坐标系：X 右，Y 前，Z 上
      * Three.js 坐标系：X 右，Y 上，Z 前
      * 转换：math(x,y,z) -> three(x,z,y)
+     * 但是用户输入 (0,2,0) 应该在 Y 轴上，所以实际转换是 math(x,y,z) -> three(x,y,z)
      */
     createPoint(obj) {
         const { x, y, z } = obj.data;
-        const group = new THREE.Group();
 
         // 点（球体）
         const geometry = new THREE.SphereGeometry(0.06, 16, 16);
@@ -100,43 +120,17 @@ export class GeomRenderer {
             color: obj.style.color || '#e0dcd2'
         });
         const mesh = new THREE.Mesh(geometry, material);
-        group.add(mesh);
+        // 不交换，直接使用数学坐标
+        mesh.position.set(x, y, z);
+        mesh.userData.objectName = obj.name;
 
-        // 标签
-        const label = this.createLabel(obj.name || obj.style.label, obj.style.color || '#e0dcd2');
-        label.position.set(0, 0.15, 0);  // 在点的上方
-        group.add(label);
+        // 使用 LabelRenderer 创建标签
+        if (this.labelRenderer) {
+            const labelPos = new THREE.Vector3(x, y + 0.15, z);  // 在点的上方
+            this.labelRenderer.createLabel(obj.name, obj, labelPos, obj.style.color || '#e0dcd2');
+        }
 
-        group.position.set(x, z, y);  // 交换 Y 和 Z
-        return group;
-    }
-
-    /**
-     * 创建标签（Sprite）
-     */
-    createLabel(text, color) {
-        const canvas = document.createElement('canvas');
-        canvas.width = 128;
-        canvas.height = 64;
-        const ctx = canvas.getContext('2d');
-
-        // 背景
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-        ctx.roundRect(0, 0, 128, 64, 8);
-        ctx.fill();
-
-        // 文字
-        ctx.fillStyle = color;
-        ctx.font = 'bold 36px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(text, 64, 32);
-
-        const texture = new THREE.CanvasTexture(canvas);
-        const spriteMat = new THREE.SpriteMaterial({ map: texture });
-        const sprite = new THREE.Sprite(spriteMat);
-        sprite.scale.set(0.5, 0.25, 1);
-        return sprite;
+        return mesh;
     }
 
     /**
@@ -148,10 +142,9 @@ export class GeomRenderer {
 
         if (!fromObj || !toObj) return null;
 
-        // 交换 Y 和 Z
         const points = [
-            new THREE.Vector3(fromObj.data.x, fromObj.data.z, fromObj.data.y),
-            new THREE.Vector3(toObj.data.x, toObj.data.z, toObj.data.y)
+            new THREE.Vector3(fromObj.data.x, fromObj.data.y, fromObj.data.z),
+            new THREE.Vector3(toObj.data.x, toObj.data.y, toObj.data.z)
         ];
 
         const geometry = new THREE.BufferGeometry().setFromPoints(points);
@@ -164,14 +157,109 @@ export class GeomRenderer {
     }
 
     /**
+     * 创建无限直线
+     */
+    createLine(obj) {
+        const fromObj = this.store.get(obj.data.from);
+        const toObj = this.store.get(obj.data.to);
+
+        if (!fromObj || !toObj) return null;
+
+        const from = new THREE.Vector3(fromObj.data.x, fromObj.data.y, fromObj.data.z);
+        const to = new THREE.Vector3(toObj.data.x, toObj.data.y, toObj.data.z);
+        const dir = new THREE.Vector3().subVectors(to, from).normalize();
+
+        const extend = 100;
+        const points = [
+            new THREE.Vector3().subVectors(from, dir.clone().multiplyScalar(extend)),
+            new THREE.Vector3().addVectors(from, dir.clone().multiplyScalar(extend))
+        ];
+
+        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+        const material = new THREE.LineBasicMaterial({
+            color: obj.style.color || '#e0dcd2',
+            linewidth: obj.style.lineWidth || 2
+        });
+
+        return new THREE.Line(geometry, material);
+    }
+
+    /**
+     * 创建射线
+     */
+    createRay(obj) {
+        const originObj = this.store.get(obj.data.origin);
+        const throughObj = this.store.get(obj.data.through);
+
+        if (!originObj || !throughObj) return null;
+
+        const origin = new THREE.Vector3(originObj.data.x, originObj.data.y, originObj.data.z);
+        const through = new THREE.Vector3(throughObj.data.x, throughObj.data.y, throughObj.data.z);
+        const dir = new THREE.Vector3().subVectors(through, origin).normalize();
+
+        const extend = 100;
+        const points = [
+            origin,
+            new THREE.Vector3().addVectors(origin, dir.clone().multiplyScalar(extend))
+        ];
+
+        const geometry = new THREE.BufferGeometry().setFromPoints(points);
+        const material = new THREE.LineBasicMaterial({
+            color: obj.style.color || '#e0dcd2',
+            linewidth: obj.style.lineWidth || 2
+        });
+
+        return new THREE.Line(geometry, material);
+    }
+
+    /**
+     * 创建平面
+     */
+    createPlane(obj) {
+        let normal, point;
+
+        if (obj.data.points) {
+            const points = obj.data.points.map(name => {
+                const p = this.store.get(name);
+                if (!p) return null;
+                return new THREE.Vector3(p.data.x, p.data.y, p.data.z);
+            });
+
+            if (points.some(p => !p)) return null;
+
+            const v1 = new THREE.Vector3().subVectors(points[1], points[0]);
+            const v2 = new THREE.Vector3().subVectors(points[2], points[0]);
+            normal = new THREE.Vector3().crossVectors(v1, v2).normalize();
+            point = points[0];
+        } else {
+            const { a, b, c, d } = obj.data;
+            normal = new THREE.Vector3(a, b, c).normalize();
+            point = new THREE.Vector3(0, 0, -d / c);
+        }
+
+        const geometry = new THREE.PlaneGeometry(10, 10);
+        const material = new THREE.MeshStandardMaterial({
+            color: obj.style.color || '#c9a04a',
+            opacity: obj.style.opacity || 0.2,
+            transparent: true,
+            side: THREE.DoubleSide
+        });
+
+        const mesh = new THREE.Mesh(geometry, material);
+        mesh.position.copy(point);
+        mesh.lookAt(point.clone().add(normal));
+
+        return mesh;
+    }
+
+    /**
      * 创建三角形
      */
     createTriangle(obj) {
         const points = obj.data.points.map(name => {
             const p = this.store.get(name);
             if (!p) return null;
-            // 交换 Y 和 Z
-            return new THREE.Vector3(p.data.x, p.data.z, p.data.y);
+            return new THREE.Vector3(p.data.x, p.data.y, p.data.z);
         });
 
         if (points.some(p => !p)) return null;
@@ -202,13 +290,11 @@ export class GeomRenderer {
         const points = obj.data.points.map(name => {
             const p = this.store.get(name);
             if (!p) return null;
-            // 交换 Y 和 Z
-            return { x: p.data.x, y: p.data.z, z: p.data.y };
+            return { x: p.data.x, y: p.data.y, z: p.data.z };
         });
 
         if (points.some(p => !p)) return null;
 
-        // ShapeGeometry 在 XY 平面上创建
         const shape = new THREE.Shape();
         shape.moveTo(points[0].x, points[0].y);
         for (let i = 1; i < points.length; i++) {
@@ -218,7 +304,6 @@ export class GeomRenderer {
 
         const geometry = new THREE.ShapeGeometry(shape);
 
-        // 调整 Z 坐标（所有点应该在同一 Z 平面上）
         const posAttr = geometry.getAttribute('position');
         const z = points[0].z;
         for (let i = 0; i < posAttr.count; i++) {
