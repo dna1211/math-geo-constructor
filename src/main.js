@@ -9,32 +9,9 @@ import { ObjectStore } from './geometry/store.js';
 import { Executor } from './parser/executor.js';
 import { tokenize } from './parser/tokenizer.js';
 import { parse } from './parser/parser.js';
-
-// ===== 事件总线 =====
-class EventBus {
-    constructor() {
-        this.listeners = new Map();
-    }
-
-    on(event, callback) {
-        if (!this.listeners.has(event)) {
-            this.listeners.set(event, new Set());
-        }
-        this.listeners.get(event).add(callback);
-        return () => this.off(event, callback);
-    }
-
-    off(event, callback) {
-        this.listeners.get(event)?.delete(callback);
-    }
-
-    emit(event, data) {
-        this.listeners.get(event)?.forEach(cb => cb(data));
-    }
-}
+import { bus } from './utils/eventBus.js';
 
 // ===== 初始化 =====
-const bus = new EventBus();
 const sceneManager = new SceneManager();
 const store = new ObjectStore(bus);
 const executor = new Executor(store, bus);
