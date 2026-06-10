@@ -28,7 +28,7 @@ export class Executor {
         this.registerCommand('Ray', { minArgs: 2, maxArgs: 2, handler: this.cmdRay.bind(this) });
         this.registerCommand('Triangle', { minArgs: 3, maxArgs: 3, handler: this.cmdTriangle.bind(this) });
         this.registerCommand('Polygon', { minArgs: 3, maxArgs: Infinity, handler: this.cmdPolygon.bind(this) });
-        this.registerCommand('Plane', { minArgs: 1, maxArgs: 3, handler: this.cmdPlane.bind(this) });
+        this.registerCommand('Plane', { minArgs: 3, maxArgs: 4, handler: this.cmdPlane.bind(this) });
 
         // 计算类
         this.registerCommand('Midpoint', { minArgs: 2, maxArgs: 2, handler: this.cmdMidpoint.bind(this) });
