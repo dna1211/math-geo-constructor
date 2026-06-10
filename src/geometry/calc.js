@@ -98,8 +98,15 @@ export function reflectPlane(point, plane) {
         ({ a, b, c, d } = plane);
     }
 
+    // 检查平面法向量是否有效（防止除零）
+    const lenSq = a * a + b * b + c * c;
+    if (lenSq < 1e-10) {
+        // 退化平面，返回原点
+        return { ...point };
+    }
+
     // 点到平面的距离
-    const dist = (a * point.x + b * point.y + c * point.z + d) / (a * a + b * b + c * c);
+    const dist = (a * point.x + b * point.y + c * point.z + d) / lenSq;
 
     // 反射点
     return {
