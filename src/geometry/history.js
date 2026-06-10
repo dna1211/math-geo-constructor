@@ -18,7 +18,11 @@ export class HistoryManager {
         // 监听对象事件
         this.bus.on('object:created', ({ name, obj }) => this.recordCreate(name, obj));
         this.bus.on('object:deleted', ({ name, obj }) => this.recordDelete(name, obj));
-        this.bus.on('object:updated', ({ name, obj, changes, beforeData, beforeStyle }) => this.recordUpdate(name, obj, changes, beforeData, beforeStyle));
+        this.bus.on('object:updated', ({ name, obj, changes, beforeData, beforeStyle, _fromParent }) => {
+            if (!_fromParent) {
+                this.recordUpdate(name, obj, changes, beforeData, beforeStyle);
+            }
+        });
     }
 
     /**

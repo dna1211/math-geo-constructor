@@ -304,8 +304,6 @@ function bindUI() {
     canvas.addEventListener('mousemove', (e) => {
         if (dragger.isDraggingNow()) {
             dragger.drag(e.clientX, e.clientY, canvas);
-            // 更新依赖对象
-            updateDependentObjects(dragger.getDragTarget());
         }
     });
 

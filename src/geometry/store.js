@@ -139,6 +139,17 @@ export class ObjectStore {
         }
 
         this.bus.emit('object:updated', { name, obj, changes, beforeData, beforeStyle });
+
+        // 自动触发依赖对象的重新渲染（如线段跟随点移动）
+        const affected = this.getAffected(name);
+        for (const depName of affected) {
+            if (depName !== name) {
+                const depObj = this.objects.get(depName);
+                if (depObj) {
+                    this.bus.emit('object:updated', { name: depName, obj: depObj, changes: {}, _fromParent: true });
+                }
+            }
+        }
     }
 
     /**
