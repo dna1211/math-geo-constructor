@@ -19,7 +19,8 @@ export const TokenType = {
 };
 
 // Token 正则表达式
-const TOKEN_RE = /\s*([A-Za-zͰ-Ͽ_][A-Za-z0-9Ͱ-Ͽ_']*|-?\d+\.?\d*|[=(),+\/*-])/g;
+// 注意：负数只有在运算符或左括号后面时才作为整体匹配
+const TOKEN_RE = /\s*([A-Za-zͰ-Ͽ_][A-Za-z0-9Ͱ-Ͽ_']*|\d+\.?\d*|[=(),+\/*-])/g;
 
 /**
  * 词法分析
@@ -65,7 +66,7 @@ export function tokenize(input) {
             type = TokenType.STAR;
         } else if (value === '/') {
             type = TokenType.SLASH;
-        } else if (/^-?\d+\.?\d*$/.test(value)) {
+        } else if (/^\d+\.?\d*$/.test(value)) {
             type = TokenType.NUMBER;
         } else {
             type = TokenType.IDENT;

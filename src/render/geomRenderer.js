@@ -290,25 +290,27 @@ export class GeomRenderer {
         const points = obj.data.points.map(name => {
             const p = this.store.get(name);
             if (!p) return null;
-            return { x: p.data.x, y: p.data.y, z: p.data.z };
+            return new THREE.Vector3(p.data.x, p.data.y, p.data.z);
         });
 
         if (points.some(p => !p)) return null;
 
-        const shape = new THREE.Shape();
-        shape.moveTo(points[0].x, points[0].y);
-        for (let i = 1; i < points.length; i++) {
-            shape.lineTo(points[i].x, points[i].y);
-        }
-        shape.closePath();
+        // 使用 BufferGeometry 构建 3D 多边形（三角扇）
+        const geometry = new THREE.BufferGeometry();
+        const vertices = [];
 
-        const geometry = new THREE.ShapeGeometry(shape);
-
-        const posAttr = geometry.getAttribute('position');
-        const z = points[0].z;
-        for (let i = 0; i < posAttr.count; i++) {
-            posAttr.setZ(i, z);
+        // 使用第一个顶点作为中心，构建三角扇
+        const center = points[0];
+        for (let i = 1; i < points.length - 1; i++) {
+            vertices.push(
+                center.x, center.y, center.z,
+                points[i].x, points[i].y, points[i].z,
+                points[i + 1].x, points[i + 1].y, points[i + 1].z
+            );
         }
+
+        geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+        geometry.computeVertexNormals();
 
         const material = new THREE.MeshStandardMaterial({
             color: obj.style.color || '#c9a04a',
