@@ -36,10 +36,21 @@ export class SceneManager {
     /** 初始化相机 */
     initCamera() {
         const aspect = this.canvas.clientWidth / this.canvas.clientHeight;
-        this.camera = new THREE.PerspectiveCamera(50, aspect, 0.1, 1000);
+        const frustumSize = 10;
+
+        // 正交投影（数学教材风格，无透视效果）
+        this.camera = new THREE.OrthographicCamera(
+            -frustumSize * aspect / 2,
+            frustumSize * aspect / 2,
+            frustumSize / 2,
+            -frustumSize / 2,
+            0.1,
+            1000
+        );
+
         // 数学标准视角：从 Z 轴上方看向 XY 平面
         // X 向右，Y 向前（屏幕里），Z 向上
-        // 顺时针旋转 90 度：从 (5, -10, 8) 旋转到 (10, 5, 8)
+        // 顺时针旋转 90 度
         this.camera.position.set(10, 5, 8);
         this.camera.lookAt(0, 0, 0);
     }
@@ -248,5 +259,37 @@ export class SceneManager {
     /** 切换网格显示 */
     toggleGrid() {
         this.grid.visible = !this.grid.visible;
+    }
+
+    /** 切换投影方式 */
+    toggleProjection() {
+        const aspect = this.canvas.clientWidth / this.canvas.clientHeight;
+        const frustumSize = 10;
+        const isOrtho = this.camera.isOrthographicCamera;
+
+        if (isOrtho) {
+            // 切换到透视投影
+            this.camera = new THREE.PerspectiveCamera(50, aspect, 0.1, 1000);
+        } else {
+            // 切换到正交投影
+            this.camera = new THREE.OrthographicCamera(
+                -frustumSize * aspect / 2,
+                frustumSize * aspect / 2,
+                frustumSize / 2,
+                -frustumSize / 2,
+                0.1,
+                1000
+            );
+        }
+
+        this.camera.position.set(10, 5, 8);
+        this.camera.lookAt(0, 0, 0);
+        this.camera.up.set(0, 0, 1);
+        this.controls.object = this.camera;
+
+        // 更新 labelRenderer 的相机引用
+        if (this.labelRenderer) {
+            this.labelRenderer.updateCamera(this.camera);
+        }
     }
 }

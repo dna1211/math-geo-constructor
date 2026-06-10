@@ -99,6 +99,14 @@ export class LabelRenderer {
     }
 
     /**
+     * 更新相机
+     * @param {THREE.Camera} camera - 新相机
+     */
+    updateCamera(camera) {
+        this.camera = camera;
+    }
+
+    /**
      * 渲染
      */
     render() {

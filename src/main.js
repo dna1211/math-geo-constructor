@@ -327,6 +327,11 @@ function bindUI() {
                     updateProperties(null);
                 }
                 break;
+            case ' ':
+                // Space 切换投影方式
+                e.preventDefault();
+                sceneManager.toggleProjection();
+                break;
         }
     });
 
