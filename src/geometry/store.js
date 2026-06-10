@@ -146,6 +146,13 @@ export class ObjectStore {
             if (depName !== name) {
                 const depObj = this.objects.get(depName);
                 if (depObj) {
+                    // 如果有重算函数，重新计算数据
+                    if (depObj.compute) {
+                        const newData = depObj.compute(this);
+                        if (newData) {
+                            Object.assign(depObj.data, newData);
+                        }
+                    }
                     this.bus.emit('object:updated', { name: depName, obj: depObj, changes: {}, _fromParent: true });
                 }
             }

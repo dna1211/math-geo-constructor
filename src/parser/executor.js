@@ -515,11 +515,19 @@ export class Executor {
             throw new Error('Midpoint 需要两个点对象');
         }
         const mid = calc.midpoint(p1.data, p2.data);
-        return {
+        const result = {
             type: 'point',
             data: mid,
             parents: [p1.name, p2.name]
         };
+        // 存储重算函数
+        result.compute = (store) => {
+            const a = store.get(p1.name);
+            const b = store.get(p2.name);
+            if (a && b) return calc.midpoint(a.data, b.data);
+            return null;
+        };
+        return result;
     }
 
     /** Fold(P, Line(A,B), angle) */
@@ -540,10 +548,21 @@ export class Executor {
         }
 
         const result = calc.fold(point.data, axisData, angle);
+        const axisName = axis.name;
+        const pointName = point.name;
         return {
             type: 'point',
             data: result,
-            parents: [point.name, axis.name]
+            parents: [pointName, axisName],
+            compute: (store) => {
+                const p = store.get(pointName);
+                const ax = store.get(axisName);
+                if (!p || !ax) return null;
+                const f = store.get(ax.data.from);
+                const t = store.get(ax.data.to);
+                if (!f || !t) return null;
+                return calc.fold(p.data, { from: f.data, to: t.data }, angle);
+            }
         };
     }
 
@@ -551,6 +570,8 @@ export class Executor {
     cmdReflect(args) {
         const [point, target] = args;
         if (!point?.data) throw new Error('Reflect 第一个参数需要是点');
+        const pointName = point.name;
+        const targetName = target.name;
 
         if (target.type === 'line' || target.type === 'segment') {
             // 关于线对称
@@ -562,7 +583,16 @@ export class Executor {
             return {
                 type: 'point',
                 data: result,
-                parents: [point.name, target.name]
+                parents: [pointName, targetName],
+                compute: (store) => {
+                    const p = store.get(pointName);
+                    const t = store.get(targetName);
+                    if (!p || !t) return null;
+                    const f = store.get(t.data.from);
+                    const tt = store.get(t.data.to);
+                    if (!f || !tt) return null;
+                    return calc.reflectLine(p.data, { from: f.data, to: tt.data });
+                }
             };
         } else if (target.type === 'plane') {
             // 关于平面对称
@@ -581,7 +611,7 @@ export class Executor {
             return {
                 type: 'point',
                 data: result,
-                parents: [point.name, target.name]
+                parents: [pointName, targetName]
             };
         }
 

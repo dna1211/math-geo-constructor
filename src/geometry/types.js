@@ -17,7 +17,8 @@ export function createGeomObject(name, type, data, parents = []) {
         data,
         style: getDefaultStyle(type),
         parents,
-        renderRef: null  // Three.js 对象引用
+        renderRef: null,  // Three.js 对象引用
+        compute: null     // 重算函数，用于父对象变化时重新计算 data
     };
 }
 
