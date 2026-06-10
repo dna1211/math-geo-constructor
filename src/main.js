@@ -156,6 +156,24 @@ function bindUI() {
     const btnExecute = document.getElementById('btn-execute');
     const btnClear = document.getElementById('btn-clear');
     const canvas = document.getElementById('canvas');
+    const btnHelp = document.getElementById('btn-help');
+    const helpModal = document.getElementById('help-modal');
+    const modalClose = document.querySelector('.modal-close');
+
+    // 帮助弹窗
+    btnHelp.addEventListener('click', () => {
+        helpModal.classList.add('active');
+    });
+
+    modalClose.addEventListener('click', () => {
+        helpModal.classList.remove('active');
+    });
+
+    helpModal.addEventListener('click', (e) => {
+        if (e.target === helpModal) {
+            helpModal.classList.remove('active');
+        }
+    });
 
     // 执行按钮
     btnExecute.addEventListener('click', () => {
@@ -327,6 +345,11 @@ function bindUI() {
             case 'Escape':
                 toolManager.cancel();
                 updateToolButtons('select');
+                helpModal.classList.remove('active');
+                break;
+            case 'F1':
+                e.preventDefault();
+                helpModal.classList.toggle('active');
                 break;
             case 'Delete':
             case 'Backspace':

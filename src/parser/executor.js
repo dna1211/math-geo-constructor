@@ -4,6 +4,7 @@
  */
 
 import * as calc from '../geometry/calc.js';
+import * as construct from '../geometry/construct.js';
 
 export class Executor {
     constructor(store, bus, history) {
@@ -34,6 +35,10 @@ export class Executor {
         this.registerCommand('Fold', { minArgs: 3, maxArgs: 3, handler: this.cmdFold.bind(this) });
         this.registerCommand('Reflect', { minArgs: 2, maxArgs: 2, handler: this.cmdReflect.bind(this) });
         this.registerCommand('Distance', { minArgs: 2, maxArgs: 2, handler: this.cmdDistance.bind(this) });
+
+        // 构造类（高级）
+        this.registerCommand('RegularPolygon', { minArgs: 4, maxArgs: 4, handler: this.cmdRegularPolygon.bind(this) });
+        this.registerCommand('EquilateralTriangle', { minArgs: 4, maxArgs: 4, handler: this.cmdEquilateralTriangle.bind(this) });
 
         // 样式类
         this.registerCommand('Color', { minArgs: 2, maxArgs: 2, handler: this.cmdColor.bind(this) });
@@ -376,6 +381,123 @@ export class Executor {
             };
         }
         throw new Error('Plane 需要 3 个点或 4 个数字（方程参数）');
+    }
+
+    /**
+     * RegularPolygon(Segment(A,B), sides, Plane(X,Y,Z), angle)
+     * 在线段上构造正多边形，与指定平面成指定角度
+     */
+    cmdRegularPolygon(args) {
+        const [seg, sides, plane, angle] = args;
+
+        // 验证参数
+        if (!seg?.data) throw new Error('RegularPolygon 第一个参数需要是线段');
+        if (typeof sides !== 'number' || sides < 3) throw new Error('RegularPolygon 第二个参数需要是 ≥3 的数字');
+        if (!plane?.data) throw new Error('RegularPolygon 第三个参数需要是平面');
+        if (typeof angle !== 'number') throw new Error('RegularPolygon 第四个参数需要是角度');
+
+        // 获取线段端点
+        const from = this.store.get(seg.data.from);
+        const to = this.store.get(seg.data.to);
+        if (!from || !to) throw new Error('线段端点不存在');
+
+        // 获取平面信息
+        let planeData;
+        if (plane.data.points) {
+            const points = plane.data.points.map(name => {
+                const p = this.store.get(name);
+                if (!p) throw new Error(`平面点 ${name} 不存在`);
+                return p.data;
+            });
+            planeData = { points };
+        } else {
+            planeData = { normal: { x: plane.data.a, y: plane.data.b, z: plane.data.c } };
+        }
+
+        // 构造正多边形
+        const vertices = construct.constructRegularPolygon(
+            { from: from.data, to: to.data },
+            sides,
+            planeData,
+            angle
+        );
+
+        // 创建点对象
+        const pointNames = [];
+        const prefix = `v${sides}`;
+        for (let i = 0; i < vertices.length; i++) {
+            const name = `${prefix}_${this.store.size() + 1}`;
+            this.store.register(name, {
+                type: 'point',
+                data: vertices[i],
+                parents: [seg.name, plane.name]
+            });
+            pointNames.push(name);
+        }
+
+        // 创建多边形
+        return {
+            type: 'polygon',
+            data: { points: pointNames },
+            parents: pointNames
+        };
+    }
+
+    /**
+     * EquilateralTriangle(Segment(A,B), Plane(X,Y,Z), angle)
+     * 在线段上构造正三角形，与指定平面成指定角度
+     */
+    cmdEquilateralTriangle(args) {
+        const [seg, plane, angle] = args;
+
+        // 验证参数
+        if (!seg?.data) throw new Error('EquilateralTriangle 第一个参数需要是线段');
+        if (!plane?.data) throw new Error('EquilateralTriangle 第二个参数需要是平面');
+        if (typeof angle !== 'number') throw new Error('EquilateralTriangle 第三个参数需要是角度');
+
+        // 获取线段端点
+        const from = this.store.get(seg.data.from);
+        const to = this.store.get(seg.data.to);
+        if (!from || !to) throw new Error('线段端点不存在');
+
+        // 获取平面信息
+        let planeData;
+        if (plane.data.points) {
+            const points = plane.data.points.map(name => {
+                const p = this.store.get(name);
+                if (!p) throw new Error(`平面点 ${name} 不存在`);
+                return p.data;
+            });
+            planeData = { points };
+        } else {
+            planeData = { normal: { x: plane.data.a, y: plane.data.b, z: plane.data.c } };
+        }
+
+        // 构造正三角形
+        const vertices = construct.constructEquilateralTriangle(
+            { from: from.data, to: to.data },
+            planeData,
+            angle
+        );
+
+        // 创建点对象
+        const pointNames = [];
+        for (let i = 0; i < vertices.length; i++) {
+            const name = `v3_${this.store.size() + 1}`;
+            this.store.register(name, {
+                type: 'point',
+                data: vertices[i],
+                parents: [seg.name, plane.name]
+            });
+            pointNames.push(name);
+        }
+
+        // 创建三角形
+        return {
+            type: 'triangle',
+            data: { points: pointNames },
+            parents: pointNames
+        };
     }
 
     /** Midpoint(A, B) */

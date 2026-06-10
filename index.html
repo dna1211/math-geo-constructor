@@ -10,7 +10,82 @@
     <!-- 标题栏 -->
     <header id="header">
         <h1>3D 几何构造工具</h1>
+        <button id="btn-help" title="帮助 (H)">?</button>
     </header>
+
+    <!-- 帮助弹窗 -->
+    <div id="help-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>命令参考</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <h3>构造类</h3>
+                <table>
+                    <tr><td><code>A = (x, y, z)</code></td><td>创建点</td></tr>
+                    <tr><td><code>Segment(A, B)</code></td><td>线段</td></tr>
+                    <tr><td><code>Line(A, B)</code></td><td>无限直线</td></tr>
+                    <tr><td><code>Ray(A, B)</code></td><td>射线</td></tr>
+                    <tr><td><code>Triangle(A, B, C)</code></td><td>三角形</td></tr>
+                    <tr><td><code>Polygon(A, B, C, ...)</code></td><td>多边形</td></tr>
+                    <tr><td><code>Plane(A, B, C)</code></td><td>平面（三点）</td></tr>
+                    <tr><td><code>Plane(a, b, c, d)</code></td><td>平面（方程）</td></tr>
+                </table>
+
+                <h3>计算类</h3>
+                <table>
+                    <tr><td><code>Midpoint(A, B)</code></td><td>中点</td></tr>
+                    <tr><td><code>Fold(P, Line(A,B), θ)</code></td><td>绕线旋转 θ°</td></tr>
+                    <tr><td><code>Reflect(P, Line(A,B))</code></td><td>关于线对称</td></tr>
+                    <tr><td><code>Reflect(P, Plane(A,B,C))</code></td><td>关于面对称</td></tr>
+                    <tr><td><code>Distance(A, B)</code></td><td>距离</td></tr>
+                </table>
+
+                <h3>高级构造</h3>
+                <table>
+                    <tr><td><code>RegularPolygon(seg, n, plane, θ)</code></td><td>正 n 边形</td></tr>
+                    <tr><td><code>EquilateralTriangle(seg, plane, θ)</code></td><td>正三角形</td></tr>
+                </table>
+                <p class="hint">seg: 基础边, n: 边数, plane: 参考平面, θ: 与平面夹角</p>
+
+                <h3>样式类</h3>
+                <table>
+                    <tr><td><code>Color(obj, red)</code></td><td>颜色（关键字）</td></tr>
+                    <tr><td><code>Color(obj, #ff8800)</code></td><td>颜色（十六进制）</td></tr>
+                    <tr><td><code>Dash(obj)</code></td><td>虚线</td></tr>
+                    <tr><td><code>Opacity(obj, 0.4)</code></td><td>透明度</td></tr>
+                    <tr><td><code>Hide(obj)</code></td><td>隐藏</td></tr>
+                    <tr><td><code>Show(obj)</code></td><td>显示</td></tr>
+                    <tr><td><code>Label(obj, "P₁")</code></td><td>自定义标签</td></tr>
+                </table>
+
+                <h3>操作类</h3>
+                <table>
+                    <tr><td><code>Delete(obj)</code></td><td>删除对象</td></tr>
+                    <tr><td><code>Undo</code></td><td>撤销</td></tr>
+                    <tr><td><code>Redo</code></td><td>重做</td></tr>
+                    <tr><td><code>Clear</code></td><td>清空所有</td></tr>
+                    <tr><td><code>Grid</code></td><td>切换网格</td></tr>
+                    <tr><td><code>Axis</code></td><td>切换坐标轴</td></tr>
+                </table>
+
+                <h3>快捷键</h3>
+                <table>
+                    <tr><td><code>Ctrl+Z</code></td><td>撤销</td></tr>
+                    <tr><td><code>Ctrl+Y</code></td><td>重做</td></tr>
+                    <tr><td><code>Ctrl+S</code></td><td>保存文件</td></tr>
+                    <tr><td><code>Ctrl+O</code></td><td>加载文件</td></tr>
+                    <tr><td><code>Ctrl+P</code></td><td>导出 PNG</td></tr>
+                    <tr><td><code>Space</code></td><td>切换投影</td></tr>
+                    <tr><td><code>V/P/L/T/H</code></td><td>切换工具</td></tr>
+                    <tr><td><code>Delete</code></td><td>删除选中</td></tr>
+                    <tr><td><code>Tab</code></td><td>自动补全</td></tr>
+                    <tr><td><code>↑/↓</code></td><td>翻阅历史</td></tr>
+                </table>
+            </div>
+        </div>
+    </div>
 
     <!-- 主内容区 -->
     <main id="app">

@@ -36,17 +36,9 @@ export class SceneManager {
     /** 初始化相机 */
     initCamera() {
         const aspect = this.canvas.clientWidth / this.canvas.clientHeight;
-        const frustumSize = 10;
 
-        // 正交投影（数学教材风格，无透视效果）
-        this.camera = new THREE.OrthographicCamera(
-            -frustumSize * aspect / 2,
-            frustumSize * aspect / 2,
-            frustumSize / 2,
-            -frustumSize / 2,
-            0.1,
-            1000
-        );
+        // 透视投影（默认）
+        this.camera = new THREE.PerspectiveCamera(50, aspect, 0.1, 1000);
 
         // 数学标准视角：从 Z 轴上方看向 XY 平面
         // X 向右，Y 向前（屏幕里），Z 向上
