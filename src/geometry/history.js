@@ -12,16 +12,22 @@ export class HistoryManager {
         this.redoStack = [];
         this.maxSize = 100;
 
+        // 防止 undo/redo 期间触发新的历史记录
+        this._isUndoRedoing = false;
+
         // 监听对象事件
         this.bus.on('object:created', ({ name, obj }) => this.recordCreate(name, obj));
         this.bus.on('object:deleted', ({ name, obj }) => this.recordDelete(name, obj));
-        this.bus.on('object:updated', ({ name, obj, changes }) => this.recordUpdate(name, obj, changes));
+        this.bus.on('object:updated', ({ name, obj, changes, beforeData, beforeStyle }) => this.recordUpdate(name, obj, changes, beforeData, beforeStyle));
     }
 
     /**
      * 记录创建操作
      */
     recordCreate(name, obj) {
+        // 如果正在执行 undo/redo，跳过记录
+        if (this._isUndoRedoing) return;
+
         this.undoStack.push({
             type: 'create',
             name,
@@ -35,6 +41,9 @@ export class HistoryManager {
      * 记录删除操作
      */
     recordDelete(name, obj) {
+        // 如果正在执行 undo/redo，跳过记录
+        if (this._isUndoRedoing) return;
+
         this.undoStack.push({
             type: 'delete',
             name,
@@ -47,17 +56,20 @@ export class HistoryManager {
     /**
      * 记录更新操作
      */
-    recordUpdate(name, obj, changes) {
-        // 获取更新前的状态
+    recordUpdate(name, obj, changes, beforeData, beforeStyle) {
+        // 如果正在执行 undo/redo，跳过记录
+        if (this._isUndoRedoing) return;
+
+        // 使用 store.update() 中记录的旧值
         const before = {};
         const after = {};
 
         if (changes.data) {
-            before.data = { ...obj.data };
+            before.data = beforeData;
             after.data = { ...changes.data };
         }
         if (changes.style) {
-            before.style = { ...obj.style };
+            before.style = beforeStyle;
             after.style = { ...changes.style };
         }
 
@@ -77,27 +89,34 @@ export class HistoryManager {
     undo() {
         if (this.undoStack.length === 0) return false;
 
-        const record = this.undoStack.pop();
-        this.redoStack.push(record);
+        // 设置标志位，防止 undo/redo 期间触发新的历史记录
+        this._isUndoRedoing = true;
 
-        switch (record.type) {
-            case 'create':
-                // 撤销创建 = 删除
-                this.store.unregister(record.name);
-                break;
+        try {
+            const record = this.undoStack.pop();
+            this.redoStack.push(record);
 
-            case 'delete':
-                // 撤销删除 = 恢复
-                this.store.register(record.name, record.snapshot);
-                break;
+            switch (record.type) {
+                case 'create':
+                    // 撤销创建 = 删除
+                    this.store.unregister(record.name);
+                    break;
 
-            case 'update':
-                // 撤销更新 = 恢复旧值
-                this.store.update(record.name, record.before);
-                break;
+                case 'delete':
+                    // 撤销删除 = 恢复
+                    this.store.register(record.name, record.snapshot);
+                    break;
+
+                case 'update':
+                    // 撤销更新 = 恢复旧值
+                    this.store.update(record.name, record.before);
+                    break;
+            }
+
+            return true;
+        } finally {
+            this._isUndoRedoing = false;
         }
-
-        return true;
     }
 
     /**
@@ -106,27 +125,34 @@ export class HistoryManager {
     redo() {
         if (this.redoStack.length === 0) return false;
 
-        const record = this.redoStack.pop();
-        this.undoStack.push(record);
+        // 设置标志位，防止 undo/redo 期间触发新的历史记录
+        this._isUndoRedoing = true;
 
-        switch (record.type) {
-            case 'create':
-                // 重做创建 = 重新创建
-                this.store.register(record.name, record.snapshot);
-                break;
+        try {
+            const record = this.redoStack.pop();
+            this.undoStack.push(record);
 
-            case 'delete':
-                // 重做删除 = 再次删除
-                this.store.unregister(record.name);
-                break;
+            switch (record.type) {
+                case 'create':
+                    // 重做创建 = 重新创建
+                    this.store.register(record.name, record.snapshot);
+                    break;
 
-            case 'update':
-                // 重做更新 = 应用新值
-                this.store.update(record.name, record.after);
-                break;
+                case 'delete':
+                    // 重做删除 = 再次删除
+                    this.store.unregister(record.name);
+                    break;
+
+                case 'update':
+                    // 重做更新 = 应用新值
+                    this.store.update(record.name, record.after);
+                    break;
+            }
+
+            return true;
+        } finally {
+            this._isUndoRedoing = false;
         }
-
-        return true;
     }
 
     /**

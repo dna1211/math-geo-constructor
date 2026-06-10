@@ -127,6 +127,10 @@ export class ObjectStore {
             throw new Error(`对象 "${name}" 不存在`);
         }
 
+        // 记录更新前的状态（用于历史记录）
+        const beforeData = changes.data ? { ...obj.data } : null;
+        const beforeStyle = changes.style ? { ...obj.style } : null;
+
         if (changes.data) {
             Object.assign(obj.data, changes.data);
         }
@@ -134,7 +138,7 @@ export class ObjectStore {
             Object.assign(obj.style, changes.style);
         }
 
-        this.bus.emit('object:updated', { name, obj, changes });
+        this.bus.emit('object:updated', { name, obj, changes, beforeData, beforeStyle });
     }
 
     /**
