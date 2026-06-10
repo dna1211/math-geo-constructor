@@ -42,6 +42,11 @@ export class ObjectStore {
             Object.assign(obj.style, definition.style);
         }
 
+        // 传递重算函数
+        if (definition.compute) {
+            obj.compute = definition.compute;
+        }
+
         this.objects.set(name, obj);
 
         // 建立依赖关系
