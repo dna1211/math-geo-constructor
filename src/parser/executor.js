@@ -489,8 +489,9 @@ export class Executor {
 
         // 创建点对象
         const pointNames = [];
+        const baseIndex = this.store.size() + 1;
         for (let i = 0; i < vertices.length; i++) {
-            const name = `v3_${this.store.size() + 1}`;
+            const name = `v3_${baseIndex + i}`;
             this.store.register(name, {
                 type: 'point',
                 data: vertices[i],
