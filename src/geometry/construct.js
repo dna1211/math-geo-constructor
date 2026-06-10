@@ -67,13 +67,12 @@ export function constructRegularPolygon(segment, sides, refPlane, angle) {
     // 计算从中心到顶点的距离（外接圆半径）
     const circumradius = edgeLength / (2 * Math.sin(Math.PI / sides));
 
-    // 计算第一个顶点相对于中点的偏移
-    // 第一个顶点在线段的 from 端
-    vertices.push({ ...from });
+    // 第一个顶点的初始角度（从 from 端开始）
+    const startAngle = Math.atan2(0, 1); // 从 edgeDir 方向开始
 
-    // 计算其余顶点
-    for (let i = 1; i < sides; i++) {
-        const theta = i * centralAngle;
+    // 统一从圆心计算所有顶点
+    for (let i = 0; i < sides; i++) {
+        const theta = startAngle + i * centralAngle;
 
         // 在正多边形平面内计算顶点位置
         // 使用 edgeDir 和 rotatedNormal 作为基向量
