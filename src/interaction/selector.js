@@ -14,6 +14,11 @@ export class Selector {
 
         // 保存原始材质，用于恢复
         this.originalMaterials = new Map();
+
+        // 监听对象删除，清理高亮状态防止材质泄漏
+        this.bus.on('object:deleted', ({ name }) => {
+            this.cleanupDeleted(name);
+        });
     }
 
     /**
@@ -131,5 +136,24 @@ export class Selector {
      */
     isSelected(name) {
         return this.selected === name;
+    }
+
+    /**
+     * 清理被删除对象的高亮状态
+     * @param {string} name - 被删除的对象名称
+     */
+    cleanupDeleted(name) {
+        // 释放保存的原始材质
+        const original = this.originalMaterials.get(name);
+        if (original) {
+            original.dispose();
+            this.originalMaterials.delete(name);
+        }
+
+        // 如果删除的是当前选中对象，重置选中状态
+        if (this.selected === name) {
+            this.selected = null;
+            this.highlighted = null;
+        }
     }
 }
