@@ -212,8 +212,13 @@ export class Executor {
             case 'binary':
                 return this.evaluateBinary(node);
 
-            case 'unary':
-                return -this.evaluate(node.operand);
+            case 'unary': {
+                const val = this.evaluate(node.operand);
+                if (typeof val !== 'number') {
+                    throw new Error('一元负号只能用于数值');
+                }
+                return -val;
+            }
 
             case 'call':
                 return this.executeCall(node);
