@@ -71,6 +71,8 @@ const commandHistory = {
 };
 
 // ===== 命令执行 =====
+let feedbackTimer = null;
+
 function executeCommand(input) {
     const feedback = document.getElementById('command-feedback');
 
@@ -90,16 +92,19 @@ function executeCommand(input) {
         commandHistory.add(input);
 
         // 5. 显示成功
+        if (feedbackTimer) clearTimeout(feedbackTimer);
         feedback.textContent = `✓ 执行成功`;
         feedback.className = 'success';
 
         // 3 秒后清除
-        setTimeout(() => {
+        feedbackTimer = setTimeout(() => {
             feedback.textContent = '';
             feedback.className = '';
+            feedbackTimer = null;
         }, 3000);
 
     } catch (error) {
+        if (feedbackTimer) clearTimeout(feedbackTimer);
         feedback.textContent = `✗ ${error.message}`;
         feedback.className = 'error';
     }
