@@ -31,7 +31,7 @@ const viewport = document.getElementById('viewport');
 const labelRenderer = new LabelRenderer(sceneManager.scene, sceneManager.camera, viewport);
 
 // 几何渲染器
-const geomRenderer = new GeomRenderer(sceneManager.scene, store, bus, labelRenderer);
+const geomRenderer = new GeomRenderer(sceneManager.scene, store, bus, labelRenderer, sceneManager.renderer);
 
 // 交互系统
 const picker = new Picker(sceneManager.camera, sceneManager.scene);
@@ -142,13 +142,21 @@ function updateProperties(name) {
 
     // 样式
     html += `<div class="prop-row"><label>颜色</label><input type="color" value="${obj.style.color || '#e0dcd2'}" data-prop="color"></div>`;
+
+    // 线宽和虚线（仅线段、直线、射线）
+    if (['segment', 'line', 'ray'].includes(obj.type)) {
+        const lw = obj.style.lineWidth || 2;
+        html += `<div class="prop-row"><label>线宽</label><input type="range" min="1" max="10" step="0.5" value="${lw}" data-prop="lineWidth"><span class="lw-value">${lw}</span></div>`;
+        html += `<div class="prop-row"><label>虚线</label><input type="checkbox" ${obj.style.dash ? 'checked' : ''} data-prop="dash"></div>`;
+    }
+
     html += `<div class="prop-row"><label>可见</label><input type="checkbox" ${obj.style.visible ? 'checked' : ''} data-prop="visible"></div>`;
 
     content.innerHTML = html;
 
     // 绑定属性修改事件
     content.querySelectorAll('input[data-prop]').forEach(input => {
-        input.addEventListener('change', (e) => {
+        const handleUpdate = (e) => {
             const prop = e.target.dataset.prop;
             let value = e.target.type === 'checkbox' ? e.target.checked : e.target.value;
 
@@ -157,10 +165,24 @@ function updateProperties(name) {
                 store.update(name, { data: { [prop]: value } });
             } else if (prop === 'color') {
                 store.update(name, { style: { color: value } });
+            } else if (prop === 'lineWidth') {
+                value = parseFloat(value);
+                store.update(name, { style: { lineWidth: value } });
+                // 更新滑块旁的数值显示
+                const span = e.target.parentElement.querySelector('.lw-value');
+                if (span) span.textContent = value;
+            } else if (prop === 'dash') {
+                store.update(name, { style: { dash: value } });
             } else if (prop === 'visible') {
                 store.update(name, { style: { visible: value } });
             }
-        });
+        };
+
+        input.addEventListener('change', handleUpdate);
+        // range 滑块实时更新
+        if (input.type === 'range') {
+            input.addEventListener('input', handleUpdate);
+        }
     });
 }
 
@@ -571,7 +593,7 @@ function autoComplete(input) {
     // 命令列表
     const commands = ['Point', 'Segment', 'Line', 'Ray', 'Triangle', 'Polygon', 'Plane',
                       'Midpoint', 'Fold', 'Reflect', 'Distance',
-                      'Color', 'Dash', 'Opacity', 'Hide', 'Show', 'Label',
+                      'Color', 'LineWidth', 'Dash', 'Opacity', 'Hide', 'Show', 'Label',
                       'Delete', 'Undo', 'Redo', 'Clear', 'Grid', 'Axis'];
 
     // 优先匹配命令

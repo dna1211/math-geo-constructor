@@ -178,6 +178,44 @@ body {
     border-color: var(--accent);
 }
 
+.prop-row input[type="range"] {
+    width: calc(100% - 36px);
+    padding: 0;
+    margin: 0;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    vertical-align: middle;
+    height: 20px;
+    line-height: 20px;
+}
+
+.prop-row input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--accent);
+    cursor: pointer;
+}
+
+.prop-row input[type="range"]::-webkit-slider-runnable-track {
+    height: 4px;
+    background: var(--bg-tertiary);
+    border-radius: 2px;
+}
+
+.lw-value {
+    display: inline-block;
+    width: 30px;
+    text-align: right;
+    font-size: 11px;
+    color: var(--text-secondary);
+    vertical-align: middle;
+    height: 20px;
+    line-height: 20px;
+}
+
 /* ===== 命令面板 ===== */
 #command-panel {
     height: 140px;

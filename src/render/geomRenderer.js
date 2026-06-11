@@ -4,13 +4,17 @@
  */
 
 import * as THREE from 'three';
+import { Line2 } from 'three/addons/lines/Line2.js';
+import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
+import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
 
 export class GeomRenderer {
-    constructor(scene, store, bus, labelRenderer) {
+    constructor(scene, store, bus, labelRenderer, renderer) {
         this.scene = scene;
         this.store = store;
         this.bus = bus;
         this.labelRenderer = labelRenderer;
+        this.renderer = renderer;
 
         // 监听对象事件
         this.bus.on('object:created', ({ name, obj }) => this.renderCreate(obj));
@@ -54,6 +58,7 @@ export class GeomRenderer {
 
         if (mesh) {
             mesh.userData.objectName = obj.name;
+            mesh.visible = obj.style.visible !== false;
             obj.renderRef = mesh;
             this.scene.add(mesh);
         }
@@ -72,6 +77,7 @@ export class GeomRenderer {
         // 点对象：直接更新位置，避免销毁重建的开销
         if (obj.type === 'point' && obj.renderRef) {
             obj.renderRef.position.set(obj.data.x, obj.data.y, obj.data.z);
+            obj.renderRef.visible = obj.style.visible !== false;
             if (this.labelRenderer) {
                 const labelPos = new THREE.Vector3(obj.data.x, obj.data.y + 0.15, obj.data.z);
                 this.labelRenderer.updateLabelPosition(obj.name, labelPos);
@@ -82,6 +88,11 @@ export class GeomRenderer {
         // 其他对象：销毁重建
         this.renderRemove(obj);
         this.renderCreate(obj);
+
+        // 同步可见性
+        if (obj.renderRef) {
+            obj.renderRef.visible = obj.style.visible !== false;
+        }
     }
 
     /**
@@ -152,6 +163,23 @@ export class GeomRenderer {
     }
 
     /**
+     * 创建线条材质（LineMaterial，支持可变线宽）
+     */
+    createLineMaterial(obj) {
+        const size = new THREE.Vector2();
+        this.renderer.getSize(size);
+        const material = new LineMaterial({
+            color: new THREE.Color(obj.style.color || '#e0dcd2').getHex(),
+            linewidth: obj.style.lineWidth || 2,
+            resolution: size,
+            dashed: obj.style.dash === true,
+            dashSize: 1,
+            gapSize: 0.5,
+        });
+        return material;
+    }
+
+    /**
      * 创建线段
      */
     createSegment(obj) {
@@ -160,20 +188,15 @@ export class GeomRenderer {
 
         if (!fromObj || !toObj) return null;
 
-        const points = [
-            new THREE.Vector3(fromObj.data.x, fromObj.data.y, fromObj.data.z),
-            new THREE.Vector3(toObj.data.x, toObj.data.y, toObj.data.z)
-        ];
-
-        const geometry = new THREE.BufferGeometry().setFromPoints(points);
-        const material = new THREE.LineBasicMaterial({
-            color: obj.style.color || '#e0dcd2',
-            // 注意：linewidth 在大多数平台上被 WebGL 忽略（始终为 1px）
-            // 如需可变宽度线条，需使用 THREE.Line2 + LineMaterial
-            linewidth: obj.style.lineWidth || 2
-        });
-
-        return new THREE.Line(geometry, material);
+        const geometry = new LineGeometry();
+        geometry.setPositions([
+            fromObj.data.x, fromObj.data.y, fromObj.data.z,
+            toObj.data.x, toObj.data.y, toObj.data.z
+        ]);
+        const material = this.createLineMaterial(obj);
+        const line = new Line2(geometry, material);
+        line.computeLineDistances();
+        return line;
     }
 
     /**
@@ -190,20 +213,15 @@ export class GeomRenderer {
         const dir = new THREE.Vector3().subVectors(to, from).normalize();
 
         const extend = 100;
-        const points = [
-            new THREE.Vector3().subVectors(from, dir.clone().multiplyScalar(extend)),
-            new THREE.Vector3().addVectors(from, dir.clone().multiplyScalar(extend))
-        ];
+        const p1 = new THREE.Vector3().subVectors(from, dir.clone().multiplyScalar(extend));
+        const p2 = new THREE.Vector3().addVectors(from, dir.clone().multiplyScalar(extend));
 
-        const geometry = new THREE.BufferGeometry().setFromPoints(points);
-        const material = new THREE.LineBasicMaterial({
-            color: obj.style.color || '#e0dcd2',
-            // 注意：linewidth 在大多数平台上被 WebGL 忽略（始终为 1px）
-            // 如需可变宽度线条，需使用 THREE.Line2 + LineMaterial
-            linewidth: obj.style.lineWidth || 2
-        });
-
-        return new THREE.Line(geometry, material);
+        const geometry = new LineGeometry();
+        geometry.setPositions([p1.x, p1.y, p1.z, p2.x, p2.y, p2.z]);
+        const material = this.createLineMaterial(obj);
+        const line = new Line2(geometry, material);
+        line.computeLineDistances();
+        return line;
     }
 
     /**
@@ -220,20 +238,14 @@ export class GeomRenderer {
         const dir = new THREE.Vector3().subVectors(through, origin).normalize();
 
         const extend = 100;
-        const points = [
-            origin,
-            new THREE.Vector3().addVectors(origin, dir.clone().multiplyScalar(extend))
-        ];
+        const end = new THREE.Vector3().addVectors(origin, dir.clone().multiplyScalar(extend));
 
-        const geometry = new THREE.BufferGeometry().setFromPoints(points);
-        const material = new THREE.LineBasicMaterial({
-            color: obj.style.color || '#e0dcd2',
-            // 注意：linewidth 在大多数平台上被 WebGL 忽略（始终为 1px）
-            // 如需可变宽度线条，需使用 THREE.Line2 + LineMaterial
-            linewidth: obj.style.lineWidth || 2
-        });
-
-        return new THREE.Line(geometry, material);
+        const geometry = new LineGeometry();
+        geometry.setPositions([origin.x, origin.y, origin.z, end.x, end.y, end.z]);
+        const material = this.createLineMaterial(obj);
+        const line = new Line2(geometry, material);
+        line.computeLineDistances();
+        return line;
     }
 
     /**
@@ -398,7 +410,14 @@ export class GeomRenderer {
      * 释放对象资源
      */
     disposeObject(obj) {
-        if (obj.geometry) obj.geometry.dispose();
+        if (obj.geometry) {
+            // LineGeometry 需要额外清理 instance buffer
+            if (obj.geometry.disposePositions) {
+                obj.geometry.disposePositions();
+                obj.geometry.disposeColors();
+            }
+            obj.geometry.dispose();
+        }
         if (obj.material) {
             if (Array.isArray(obj.material)) {
                 obj.material.forEach(m => m.dispose());

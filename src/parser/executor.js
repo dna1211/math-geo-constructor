@@ -45,6 +45,7 @@ export class Executor {
 
         // 样式类
         this.registerCommand('Color', { minArgs: 2, maxArgs: 2, handler: this.cmdColor.bind(this) });
+        this.registerCommand('LineWidth', { minArgs: 2, maxArgs: 2, handler: this.cmdLineWidth.bind(this) });
         this.registerCommand('Dash', { minArgs: 1, maxArgs: 2, handler: this.cmdDash.bind(this) });
         this.registerCommand('Opacity', { minArgs: 2, maxArgs: 2, handler: this.cmdOpacity.bind(this) });
         this.registerCommand('Hide', { minArgs: 1, maxArgs: 1, handler: this.cmdHide.bind(this) });
@@ -204,6 +205,9 @@ export class Executor {
                 return node.value;
 
             case 'string':
+                return node.value;
+
+            case 'boolean':
                 return node.value;
 
             case 'ident':
@@ -668,6 +672,15 @@ export class Executor {
         if (!obj?.name) throw new Error('Color 第一个参数需要是对象');
         this.store.update(obj.name, { style: { color } });
         return { type: 'command', name: 'Color' };
+    }
+
+    /** LineWidth(obj, number) */
+    cmdLineWidth(args) {
+        const [obj, width] = args;
+        if (!obj?.name) throw new Error('LineWidth 第一个参数需要是对象');
+        if (typeof width !== 'number') throw new Error('LineWidth 第二个参数需要是数字');
+        this.store.update(obj.name, { style: { lineWidth: width } });
+        return { type: 'command', name: 'LineWidth' };
     }
 
     /** Dash(obj, true/false) */

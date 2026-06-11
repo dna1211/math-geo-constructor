@@ -129,6 +129,12 @@ export class Parser {
             return { type: 'string', value: token.value };
         }
 
+        // 布尔值
+        if (token.type === TokenType.BOOL) {
+            this.advance();
+            return { type: 'boolean', value: token.value };
+        }
+
         // 标识符或函数调用
         if (token.type === TokenType.IDENT) {
             // 检查是否是函数调用

@@ -8,6 +8,7 @@ export const TokenType = {
     IDENT: 'IDENT',         // 标识符：A, B, α, β, P'
     NUMBER: 'NUMBER',       // 数字：123, -1.5, 0.5
     STRING: 'STRING',       // 字符串："hello", '#ff0000'
+    BOOL: 'BOOL',           // 布尔值：true, false
     LPAREN: 'LPAREN',       // (
     RPAREN: 'RPAREN',       // )
     COMMA: 'COMMA',         // ,
@@ -72,6 +73,8 @@ export function tokenize(input) {
         } else if ((value.startsWith('"') && value.endsWith('"')) ||
                    (value.startsWith("'") && value.endsWith("'"))) {
             type = TokenType.STRING;
+        } else if (value === 'true' || value === 'false') {
+            type = TokenType.BOOL;
         } else {
             type = TokenType.IDENT;
         }
@@ -79,7 +82,8 @@ export function tokenize(input) {
         tokens.push({
             type,
             value: type === TokenType.NUMBER ? parseFloat(value) :
-                   type === TokenType.STRING ? value.slice(1, -1) : value,
+                   type === TokenType.STRING ? value.slice(1, -1) :
+                   type === TokenType.BOOL ? value === 'true' : value,
             position: match.index
         });
     }

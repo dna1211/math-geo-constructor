@@ -19,6 +19,14 @@ export class Selector {
         this.bus.on('object:deleted', ({ name }) => {
             this.cleanupDeleted(name);
         });
+
+        // 监听对象更新，清理旧材质引用（避免 renderUpdate 销毁重建后旧材质被 dispose 导致恢复失效）
+        this.bus.on('object:updated', ({ name }) => {
+            this.originalMaterials.delete(name);
+            if (this.highlighted === name) {
+                this.highlighted = null;
+            }
+        });
     }
 
     /**
@@ -78,10 +86,13 @@ export class Selector {
         this.originalMaterials.set(name, mesh.material);
 
         // 根据材质类型选择高亮方式
-        const isLine = mesh.material.isLineBasicMaterial || mesh.material.isLineDashedMaterial;
+        const isLine = mesh.material.isLineBasicMaterial ||
+                       mesh.material.isLineDashedMaterial ||
+                       mesh.material.isLineMaterial ||
+                       mesh.material.type === 'LineMaterial';
 
         if (isLine) {
-            // 线型对象：用颜色变亮方式高亮（emissive 对 LineBasicMaterial 无效）
+            // 线型对象：用颜色变亮方式高亮
             const highlightMat = mesh.material.clone();
             const origColor = mesh.material.color.clone();
             // 提亮颜色
