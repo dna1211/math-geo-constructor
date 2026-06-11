@@ -7,48 +7,38 @@
 - **渲染引擎**：Three.js
 - **UI 框架**：纯 HTML/CSS/JS
 - **构建工具**：Vite
-- **数据库**：better-sqlite3（开发环境）
 
 ## 项目结构
 
 ```
 ├── src/                       # 源码
-│   ├── main.js                # 入口
+│   ├── main.js                # 入口，组装各模块，绑定 UI 事件
+│   ├── storage.js             # LocalStorage 自动保存 + 文件导入导出
+│   ├── style.css              # 应用样式
+│   ├── utils/
+│   │   └── eventBus.js        # 事件总线
 │   ├── parser/                # 命令解析器
 │   │   ├── tokenizer.js       #   词法分析
-│   │   ├── parser.js          #   语法解析
+│   │   ├── parser.js          #   语法解析（递归下降）
 │   │   └── executor.js        #   命令执行
 │   ├── geometry/              # 几何数据层
 │   │   ├── store.js           #   对象仓库 + 依赖图
 │   │   ├── types.js           #   类型定义
-│   │   ├── calc.js            #   几何计算
-│   │   └── constraints.js     #   约束系统
+│   │   ├── calc.js            #   几何计算（中点、旋转、反射等）
+│   │   ├── construct.js       #   复杂构造算法（正多边形等）
+│   │   └── history.js         #   撤销/重做管理
 │   ├── interaction/           # 交互控制层
 │   │   ├── toolManager.js     #   工具状态机
-│   │   ├── picker.js          #   3D 拾取
+│   │   ├── picker.js          #   3D 拾取（射线检测）
 │   │   ├── dragger.js         #   拖拽控制
-│   │   └── selector.js        #   选中管理
-│   ├── render/                # 渲染层
-│   │   ├── scene.js           #   场景初始化
-│   │   ├── geomRenderer.js    #   几何渲染
-│   │   ├── labelRenderer.js   #   标签渲染
-│   │   ├── axesRenderer.js    #   坐标轴
-│   │   └── gridRenderer.js    #   网格
-│   ├── api/
-│   │   └── client.js          # SQLite API 客户端
-│   └── storage.js             # LocalStorage 自动保存
-│
-├── server/                    # 后端（Vite 插件）
-│   ├── vite-plugin-api.js     # API 中间件
-│   └── db.js                  # SQLite 操作
-│
-├── data/                      # 数据库文件
-│   └── geometry.db
+│   │   └── selector.js        #   选中管理 + 高亮
+│   └── render/                # 渲染层
+│       ├── scene.js           #   场景、相机、灯光、坐标轴、网格
+│       ├── geomRenderer.js    #   几何对象 → Three.js Mesh
+│       └── labelRenderer.js   #   CSS2D 标签渲染
 │
 ├── docs/                      # 文档
-│
 ├── index.html                 # 入口页面
-├── style.css                  # 样式
 ├── vite.config.js             # Vite 配置
 ├── package.json
 └── .gitignore
@@ -67,8 +57,19 @@ npm run dev
 npm run build
 ```
 
+## 支持的命令
+
+| 类别 | 命令 | 示例 |
+|------|------|------|
+| 构造 | Point, Segment, Line, Ray, Triangle, Polygon, Plane | `A = Point(0, 0, 0)` |
+| 计算 | Midpoint, Fold, Reflect, Distance | `M = Midpoint(A, B)` |
+| 高级 | RegularPolygon, EquilateralTriangle | `RP = RegularPolygon(S, 6, P, 30)` |
+| 样式 | Color, Dash, Opacity, Hide, Show, Label | `Color(A, "#ff0000")` |
+| 操作 | Delete, Undo, Redo, Clear, Grid, Axis | `Undo` |
+
 ## 保存方式
 
-- **自动保存**：LocalStorage（每次命令后自动）
-- **手动导出**：JSON 文件下载
-- **数据库**：SQLite（开发环境，通过 Vite 插件）
+- **自动保存**：LocalStorage（每次命令后 2 秒节流）
+- **手动导出**：JSON 文件下载（Ctrl+S）
+- **导入**：JSON 文件加载（Ctrl+O）
+- **导出图片**：PNG 截图（Ctrl+P）
