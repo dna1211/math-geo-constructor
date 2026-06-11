@@ -236,7 +236,9 @@ export class Executor {
                 case '+': return left + right;
                 case '-': return left - right;
                 case '*': return left * right;
-                case '/': return left / right;
+                case '/':
+                    if (right === 0) throw new Error('除数不能为零');
+                    return left / right;
             }
         }
 
