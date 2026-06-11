@@ -446,6 +446,23 @@ function bindUI() {
             updateProperties(null);
         }
     });
+
+    // 监听 Grid/Axis 命令
+    bus.on('command:grid', ({ visible }) => {
+        if (typeof visible === 'boolean') {
+            sceneManager.grid.visible = visible;
+        } else {
+            sceneManager.toggleGrid();
+        }
+    });
+
+    bus.on('command:axis', ({ visible }) => {
+        if (typeof visible === 'boolean') {
+            sceneManager.axes.visible = visible;
+        } else {
+            sceneManager.toggleAxes();
+        }
+    });
 }
 
 // 获取可拾取对象
