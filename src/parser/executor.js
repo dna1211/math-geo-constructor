@@ -142,11 +142,14 @@ export class Executor {
             }
         }
 
-        // 如果是数字或元组，创建点
+        // 如果是数字，存储为标量变量（点对象而非数值点）
         if (typeof value === 'number') {
+            // 用一个特殊的点对象表示标量，放在 X 轴上
+            // 并在 style.label 中记录实际数值
             return this.store.register(ast.name, {
                 type: 'point',
-                data: { x: value, y: 0, z: 0 }
+                data: { x: value, y: 0, z: 0 },
+                style: { label: `= ${value}` }
             });
         }
 
