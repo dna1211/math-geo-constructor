@@ -1,0 +1,66 @@
+# 四棱锥 P-ABCD
+# 条件：ABCD为正方形，PAD为等边三角形，PAD⊥ABCD，AD=2，E为PA中点
+# 坐标系：D为原点，DA沿X轴，DC沿Y轴，Z轴向上
+
+# === 底面正方形 ===
+D = Point(0, 0, 0)
+A = Point(2, 0, 0)
+B = Point(2, 2, 0)
+C = Point(0, 2, 0)
+Polygon(D, A, B, C)
+
+# === 顶点 P（等边三角形PAD，高√3≈1.732）===
+P = Point(1, 0, 1.732)
+
+# === 四条侧棱 ===
+Segment(P, A)
+Segment(P, B)
+Segment(P, C)
+Segment(P, D)
+
+# === 四个侧面 ===
+Triangle(P, D, A)
+Triangle(P, A, B)
+Triangle(P, B, C)
+Triangle(P, C, D)
+
+# === PA 中点 E ===
+E = Midpoint(A, P)
+
+# === 证明辅助线 ===
+# M 为 BD 中点（正方形中心），EM 在平面 BDE 内
+M = Midpoint(B, D)
+Segment(B, D)
+Segment(B, E)
+Segment(D, E)
+Segment(E, M)
+
+# === 样式 ===
+Color(A, "#ffffff")
+Color(B, "#ffffff")
+Color(C, "#ffffff")
+Color(D, "#ffffff")
+Color(P, "#ff6666")
+Color(E, "#66ccff")
+Color(M, "#66ff66")
+Label(A, "A")
+Label(B, "B")
+Label(C, "C")
+Label(D, "D(原点)")
+Label(P, "P(1,0,√3)")
+Label(E, "E(PA中点)")
+Label(M, "M(BD中点)")
+
+# ========================================
+# 证明思路：PC // 平面 BDE
+# ========================================
+#
+# 取 BD 中点 M（正方形中心），连接 EM
+#
+# 向量验证：
+#   PC = C - P = (0,2,0) - (1,0,√3) = (-1, 2, -√3)
+#   EM = M - E = (1,1,0) - (1.5,0,√3/2) = (-0.5, 1, -√3/2)
+#   EM = 1/2 * PC  →  PC // EM
+#
+# 因为 EM ⊂ 平面 BDE，PC ⊄ 平面 BDE
+# 所以 PC // 平面 BDE  ∎
