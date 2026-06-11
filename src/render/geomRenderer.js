@@ -235,7 +235,18 @@ export class GeomRenderer {
         } else {
             const { a, b, c, d } = obj.data;
             normal = new THREE.Vector3(a, b, c).normalize();
-            point = new THREE.Vector3(0, 0, -d / c);
+
+            // 选择非零系数计算平面上的点，避免除零
+            if (Math.abs(c) > 1e-6) {
+                point = new THREE.Vector3(0, 0, -d / c);
+            } else if (Math.abs(b) > 1e-6) {
+                point = new THREE.Vector3(0, -d / b, 0);
+            } else if (Math.abs(a) > 1e-6) {
+                point = new THREE.Vector3(-d / a, 0, 0);
+            } else {
+                // 法向量退化，使用原点
+                point = new THREE.Vector3(0, 0, 0);
+            }
         }
 
         const geometry = new THREE.PlaneGeometry(10, 10);
