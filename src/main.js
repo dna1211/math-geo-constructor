@@ -476,6 +476,15 @@ function ndcToWorld(ndcX, ndcY) {
     vector.unproject(camera);
 
     const dir = vector.sub(camera.position).normalize();
+
+    // 当相机视线平行于 XY 平面时 dir.z 接近 0，会产生除零
+    if (Math.abs(dir.z) < 1e-6) {
+        // 回退：使用相机到原点的距离作为默认距离
+        const fallbackDist = camera.position.length();
+        const pos = camera.position.clone().add(dir.multiplyScalar(fallbackDist));
+        return { x: pos.x, y: pos.y };
+    }
+
     const distance = -camera.position.z / dir.z;
     const pos = camera.position.clone().add(dir.multiplyScalar(distance));
 
