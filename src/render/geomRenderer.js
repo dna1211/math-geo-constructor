@@ -173,8 +173,8 @@ export class GeomRenderer {
             linewidth: obj.style.lineWidth || 2,
             resolution: size,
             dashed: obj.style.dash === true,
-            dashSize: 1,
-            gapSize: 0.5,
+            dashSize: 0.15,
+            gapSize: 0.08,
         });
         return material;
     }
