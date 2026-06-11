@@ -1,55 +1,73 @@
-# === (1) 证明 PC//平面BDE ===
+# === (1) 证明：PC // 平面 BDE ===
 D = Point(0, 0, 0)
 A = Point(2, 0, 0)
 B = Point(2, 2, 0)
 C = Point(0, 2, 0)
-Polygon(D, A, B, C)
 P = Point(1, 0, 1.732)
-Segment(P, A)
-Segment(P, B)
-Segment(P, C)
-Segment(P, D)
-Triangle(P, D, A)
-Triangle(P, A, B)
-Triangle(P, B, C)
-Triangle(P, C, D)
-E = Midpoint(A, P)
-M = Midpoint(B, D)
-Segment(B, D)
-Segment(B, E)
-Segment(D, E)
-Segment(E, M)
-Color(P, "#ff6666")
-Color(E, "#66ccff")
-Color(M, "#66ff66")
-Label(D, "D(原点)")
-Label(P, "P(1,0,√3)")
+segDA = Segment(D, A)
+segAB = Segment(A, B)
+segBC = Segment(B, C)
+segCD = Segment(C, D)
+segPA = Segment(P, A)
+segPB = Segment(P, B)
+segPC = Segment(P, C)
+segPD = Segment(P, D)
+segAC = Segment(A, C)
+Dash(segAC, true)
+segBD = Segment(B, D)
+Dash(segBD, true)
+triPAC = Triangle(P, A, C)
+E = Midpoint(P, A)
+M = Midpoint(A, C)
+segEM = Segment(E, M)
+Dash(segEM, true)
+triBDE = Triangle(B, D, E)
+segBE = Segment(B, E)
+segDE = Segment(D, E)
+Color(segPC, "#ff4444")
+Color(triBDE, "#4488ff")
+Opacity(triBDE, 0.2)
+Color(segEM, "#44cc44")
+Hide(M)
+Label(D, "D")
+Label(A, "A")
+Label(B, "B")
+Label(C, "C")
+Label(P, "P")
 Label(E, "E(PA中点)")
-Label(M, "M(BD中点)")
+Label(M, "M(中心)")
 
-# === (2) 求PC与底面夹角正切值 ===
+# === (2) 求直线 PC 和平面 ABCD 所成角的正切值 ===
 D = Point(0, 0, 0)
 A = Point(2, 0, 0)
 B = Point(2, 2, 0)
 C = Point(0, 2, 0)
-Polygon(D, A, B, C)
 P = Point(1, 0, 1.732)
-Segment(P, A)
-Segment(P, B)
-Segment(P, C)
-Segment(P, D)
-Triangle(P, D, A)
-Triangle(P, A, B)
-Triangle(P, B, C)
-Triangle(P, C, D)
-Pp = Point(1, 0, 0)
-Segment(P, Pp)
-Segment(Pp, C)
-Color(P, "#ff6666")
-Color(Pp, "#ffaa00")
-Label(D, "D(原点)")
-Label(P, "P(1,0,√3)")
-Label(Pp, "P'(投影)")
+segDA = Segment(D, A)
+segAB = Segment(A, B)
+segBC = Segment(B, C)
+segCD = Segment(C, D)
+segPA = Segment(P, A)
+segPB = Segment(P, B)
+segPC = Segment(P, C)
+segPD = Segment(P, D)
+baseABCD = Polygon(A, B, C, D)
+Color(baseABCD, "#c9a04a")
+Opacity(baseABCD, 0.15)
+Color(segPC, "#ff4444")
+H = Point(1, 0, 0)
+segPH = Segment(P, H)
+Dash(segPH, true)
+Color(segPH, "#44cc44")
+segHC = Segment(H, C)
+Dash(segHC, true)
+Color(segHC, "#4488ff")
+Label(D, "D")
+Label(A, "A")
+Label(B, "B")
+Label(C, "C")
+Label(P, "P")
+Label(H, "H(投影)")
 
 # ========================================
 # 解题过程
@@ -60,20 +78,19 @@ Label(Pp, "P'(投影)")
 #
 # 坐标：
 #   D(0,0,0)  A(2,0,0)  B(2,2,0)  C(0,2,0)
-#   P(1,0,√3)  E = Midpoint(A,P)  M = Midpoint(B,D)
+#   P(1,0,√3)  E = Midpoint(P,A)  M = Midpoint(A,C)
 #
 # (1) 证明：PC // 平面 BDE
-#   取 BD 中点 M，连接 EM
-#   PC = C - P = (-1, 2, -√3)
-#   EM = M - E = (-0.5, 1, -√3/2) = ½ × PC
-#   ∴ PC // EM
-#   又 EM ⊂ 平面 BDE，PC ⊄ 平面 BDE
+#   M 为正方形中心（对角线 AC 与 BD 交点）
+#   E 为 PA 中点，M 为 AC 中点
+#   EM 为 △PAC 的中位线，∴ EM // PC
+#   EM ⊂ 平面 BDE，PC ⊄ 平面 BDE
 #   ∴ PC // 平面 BDE  ∎
 #
 # (2) 求 PC 与平面 ABCD 所成角的正切值
-#   P 在底面投影 P' = (1, 0, 0)
-#   Rt△PP'C 中：
-#     PP' = √3（P 到底面距离）
-#     P'C = √((1-0)² + (0-2)²) = √5
-#     tan(∠PCP') = PP' / P'C = √3 / √5 = √15/5
+#   P 在底面投影 H = (1, 0, 0)
+#   Rt△PHC 中：
+#     PH = √3（P 到底面距离）
+#     HC = √((1-0)² + (0-2)²) = √5
+#     tan(∠PCH) = PH / HC = √3 / √5 = √15/5
 #   答：tanθ = √15/5
