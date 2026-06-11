@@ -203,6 +203,9 @@ export class Executor {
             case 'number':
                 return node.value;
 
+            case 'string':
+                return node.value;
+
             case 'ident':
                 if (this.store.has(node.name)) {
                     return this.store.get(node.name);

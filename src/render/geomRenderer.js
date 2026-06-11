@@ -63,6 +63,12 @@ export class GeomRenderer {
      * 更新对象
      */
     renderUpdate(obj) {
+        // 更新标签文字（如果 style.label 变化）
+        if (this.labelRenderer) {
+            const labelText = obj.style.label || obj.name;
+            this.labelRenderer.updateLabelText(obj.name, labelText);
+        }
+
         // 点对象：直接更新位置，避免销毁重建的开销
         if (obj.type === 'point' && obj.renderRef) {
             obj.renderRef.position.set(obj.data.x, obj.data.y, obj.data.z);

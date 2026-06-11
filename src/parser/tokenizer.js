@@ -7,6 +7,7 @@
 export const TokenType = {
     IDENT: 'IDENT',         // 标识符：A, B, α, β, P'
     NUMBER: 'NUMBER',       // 数字：123, -1.5, 0.5
+    STRING: 'STRING',       // 字符串："hello", '#ff0000'
     LPAREN: 'LPAREN',       // (
     RPAREN: 'RPAREN',       // )
     COMMA: 'COMMA',         // ,
@@ -20,7 +21,7 @@ export const TokenType = {
 
 // Token 正则表达式
 // 注意：负数只有在运算符或左括号后面时才作为整体匹配
-const TOKEN_RE = /\s*([A-Za-zͰ-Ͽ_][A-Za-z0-9Ͱ-Ͽ_']*|\d+\.?\d*|[=(),+\/*-])/g;
+const TOKEN_RE = /\s*("[^"]*"|'[^']*'|[A-Za-zͰ-Ͽ_][A-Za-z0-9Ͱ-Ͽ_']*|\d+\.?\d*|[=(),+\/*-])/g;
 
 /**
  * 词法分析
@@ -68,13 +69,17 @@ export function tokenize(input) {
             type = TokenType.SLASH;
         } else if (/^\d+\.?\d*$/.test(value)) {
             type = TokenType.NUMBER;
+        } else if ((value.startsWith('"') && value.endsWith('"')) ||
+                   (value.startsWith("'") && value.endsWith("'"))) {
+            type = TokenType.STRING;
         } else {
             type = TokenType.IDENT;
         }
 
         tokens.push({
             type,
-            value: type === TokenType.NUMBER ? parseFloat(value) : value,
+            value: type === TokenType.NUMBER ? parseFloat(value) :
+                   type === TokenType.STRING ? value.slice(1, -1) : value,
             position: match.index
         });
     }

@@ -40,10 +40,10 @@ export class LabelRenderer {
             this.removeLabel(name);
         }
 
-        // 创建 DOM 元素
+        // 创建 DOM 元素（优先使用自定义标签）
         const div = document.createElement('div');
         div.className = 'geom-label';
-        div.textContent = name;
+        div.textContent = (obj && obj.style && obj.style.label) ? obj.style.label : name;
         div.style.color = color || '#ffffff';
         div.style.backgroundColor = 'rgba(0, 0, 0, 0.6)';
         div.style.padding = '2px 6px';
@@ -73,6 +73,18 @@ export class LabelRenderer {
         const label = this.labels.get(name);
         if (label) {
             label.position.copy(position);
+        }
+    }
+
+    /**
+     * 更新标签文字
+     * @param {string} name - 对象名称
+     * @param {string} text - 新标签文字
+     */
+    updateLabelText(name, text) {
+        const label = this.labels.get(name);
+        if (label && label.element) {
+            label.element.textContent = text;
         }
     }
 

@@ -123,6 +123,12 @@ export class Parser {
             return { type: 'number', value: token.value };
         }
 
+        // 字符串
+        if (token.type === TokenType.STRING) {
+            this.advance();
+            return { type: 'string', value: token.value };
+        }
+
         // 标识符或函数调用
         if (token.type === TokenType.IDENT) {
             // 检查是否是函数调用
