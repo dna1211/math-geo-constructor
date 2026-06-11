@@ -565,6 +565,7 @@ function autoComplete(input) {
     if (!match) return;
 
     const partial = match[0];
+    if (partial.length < 3) return;  // 至少 3 个字符才触发补全
     const startPos = cursorPos - partial.length;
 
     // 获取所有可能的补全项
