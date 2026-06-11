@@ -57,6 +57,9 @@ export class ObjectStore {
         this.parents.set(name, new Set(obj.parents));
 
         for (const parent of obj.parents) {
+            if (!this.objects.has(parent)) {
+                console.warn(`对象 "${name}" 的父对象 "${parent}" 不存在`);
+            }
             if (!this.dependents.has(parent)) {
                 this.dependents.set(parent, new Set());
             }
