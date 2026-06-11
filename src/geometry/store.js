@@ -17,6 +17,9 @@ export class ObjectStore {
         // 项目信息
         this.projectName = '未命名项目';
         this.createdTime = null;
+
+        // 批量操作模式（抑制事件以提升性能）
+        this._batchMode = false;
     }
 
     /**
@@ -60,7 +63,10 @@ export class ObjectStore {
             this.dependents.get(parent).add(name);
         }
 
-        this.bus.emit('object:created', { name, obj });
+        // 批量模式下抑制事件
+        if (!this._batchMode) {
+            this.bus.emit('object:created', { name, obj });
+        }
         return obj;
     }
 
@@ -221,9 +227,19 @@ export class ObjectStore {
      * @param {Object} data - 序列化数据
      */
     deserialize(data) {
-        this.clear();
-        for (const [name, obj] of Object.entries(data)) {
-            this.register(name, obj);
+        this._batchMode = true;
+        try {
+            this.clear();
+            for (const [name, obj] of Object.entries(data)) {
+                this.register(name, obj);
+            }
+        } finally {
+            this._batchMode = false;
+        }
+        // 批量完成后统一触发一次清空和重建通知
+        this.bus.emit('store:cleared');
+        for (const [name, obj] of this.objects) {
+            this.bus.emit('object:created', { name, obj });
         }
     }
 
