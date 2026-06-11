@@ -110,6 +110,11 @@ function executeCommand(input) {
     }
 }
 
+// HTML 转义
+function escapeHtml(str) {
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 // ===== 属性面板更新 =====
 function updateProperties(name) {
     const content = document.getElementById('prop-content');
@@ -124,9 +129,9 @@ function updateProperties(name) {
 
     let html = '';
 
-    // 基本信息
-    html += `<div class="prop-row"><label>名称</label><input type="text" value="${obj.name}" readonly></div>`;
-    html += `<div class="prop-row"><label>类型</label><input type="text" value="${obj.type}" readonly></div>`;
+    // 基本信息（转义防止 XSS）
+    html += `<div class="prop-row"><label>名称</label><input type="text" value="${escapeHtml(obj.name)}" readonly></div>`;
+    html += `<div class="prop-row"><label>类型</label><input type="text" value="${escapeHtml(obj.type)}" readonly></div>`;
 
     // 坐标（点对象）
     if (obj.type === 'point') {
