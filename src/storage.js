@@ -90,7 +90,8 @@ export class StorageManager {
         link.href = url;
         link.click();
 
-        URL.revokeObjectURL(url);
+        // 延迟释放 URL，防止慢浏览器下下载未开始就被释放
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
     /**
