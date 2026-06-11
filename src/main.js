@@ -208,12 +208,14 @@ function bindUI() {
     // 读取保存的主题偏好
     const savedTheme = localStorage.getItem(THEME_KEY) || 'dark';
     applyTheme(savedTheme);
+    sceneManager.setTheme(savedTheme);
 
     btnTheme.addEventListener('click', () => {
         const current = document.documentElement.getAttribute('data-theme');
         const next = current === 'light' ? 'dark' : 'light';
         applyTheme(next);
         localStorage.setItem(THEME_KEY, next);
+        sceneManager.setTheme(next);
     });
 
     // 执行按钮

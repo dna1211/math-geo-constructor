@@ -269,6 +269,17 @@ export class SceneManager {
         link.click();
     }
 
+    /** 切换主题 */
+    setTheme(theme) {
+        if (theme === 'light') {
+            this.renderer.setClearColor(0xd8d6d0);
+            this.grid.material.color.set(0xb0aea8);
+        } else {
+            this.renderer.setClearColor(0x0b0b12);
+            this.grid.material.color.set(0x1a1a28);
+        }
+    }
+
     /** 切换投影方式 */
     toggleProjection() {
         const aspect = this.canvas.clientWidth / this.canvas.clientHeight;
