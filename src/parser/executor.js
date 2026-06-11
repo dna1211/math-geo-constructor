@@ -15,6 +15,9 @@ export class Executor {
         // 命令注册表
         this.commands = new Map();
         this.registerBuiltinCommands();
+
+        // 全局计数器（避免删除后名称冲突）
+        this._autoCounter = 0;
     }
 
     /**
@@ -433,7 +436,8 @@ export class Executor {
         const pointNames = [];
         const prefix = `v${sides}`;
         for (let i = 0; i < vertices.length; i++) {
-            const name = `${prefix}_${this.store.size() + 1}`;
+            this._autoCounter++;
+            const name = `${prefix}_${this._autoCounter}`;
             this.store.register(name, {
                 type: 'point',
                 data: vertices[i],
@@ -489,9 +493,9 @@ export class Executor {
 
         // 创建点对象
         const pointNames = [];
-        const baseIndex = this.store.size() + 1;
         for (let i = 0; i < vertices.length; i++) {
-            const name = `v3_${baseIndex + i}`;
+            this._autoCounter++;
+            const name = `v3_${this._autoCounter}`;
             this.store.register(name, {
                 type: 'point',
                 data: vertices[i],

@@ -39,6 +39,9 @@ const selector = new Selector(store, bus);
 const dragger = new Dragger(store, picker, bus);
 const toolManager = new ToolManager(bus);
 
+// 全局点计数器（避免删除后名称冲突）
+let globalPointCounter = 0;
+
 // ===== 命令历史 =====
 const commandHistory = {
     history: [],
@@ -295,7 +298,8 @@ function bindUI() {
                 const ndc = Picker.screenToNDC(e.clientX, e.clientY, canvas);
                 // 将 NDC 坐标转换为世界坐标（在 Z=0 平面上）
                 const worldPos = ndcToWorld(ndc.x, ndc.y);
-                const pointName = `P${store.size() + 1}`;
+                globalPointCounter++;
+                const pointName = `P${globalPointCounter}`;
                 executeCommand(`${pointName} = Point(${worldPos.x.toFixed(2)}, ${worldPos.y.toFixed(2)}, 0)`);
             }
         }
