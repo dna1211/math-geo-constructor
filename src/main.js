@@ -570,9 +570,9 @@ function autoComplete(input) {
     // 获取所有可能的补全项
     const candidates = [];
 
-    // 对象名称
+    // 对象名称（大小写不敏感）
     store.getNames().forEach(name => {
-        if (name.startsWith(partial)) {
+        if (name.toLowerCase().startsWith(partial.toLowerCase())) {
             candidates.push(name);
         }
     });
