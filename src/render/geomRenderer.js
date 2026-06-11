@@ -162,6 +162,8 @@ export class GeomRenderer {
         const geometry = new THREE.BufferGeometry().setFromPoints(points);
         const material = new THREE.LineBasicMaterial({
             color: obj.style.color || '#e0dcd2',
+            // 注意：linewidth 在大多数平台上被 WebGL 忽略（始终为 1px）
+            // 如需可变宽度线条，需使用 THREE.Line2 + LineMaterial
             linewidth: obj.style.lineWidth || 2
         });
 
@@ -190,6 +192,8 @@ export class GeomRenderer {
         const geometry = new THREE.BufferGeometry().setFromPoints(points);
         const material = new THREE.LineBasicMaterial({
             color: obj.style.color || '#e0dcd2',
+            // 注意：linewidth 在大多数平台上被 WebGL 忽略（始终为 1px）
+            // 如需可变宽度线条，需使用 THREE.Line2 + LineMaterial
             linewidth: obj.style.lineWidth || 2
         });
 
@@ -218,6 +222,8 @@ export class GeomRenderer {
         const geometry = new THREE.BufferGeometry().setFromPoints(points);
         const material = new THREE.LineBasicMaterial({
             color: obj.style.color || '#e0dcd2',
+            // 注意：linewidth 在大多数平台上被 WebGL 忽略（始终为 1px）
+            // 如需可变宽度线条，需使用 THREE.Line2 + LineMaterial
             linewidth: obj.style.lineWidth || 2
         });
 
