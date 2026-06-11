@@ -37,9 +37,10 @@ function getDefaultStyle(type) {
         case 'point':
             return { ...baseStyle, color: '#e0dcd2' };
         case 'segment':
+            return { ...baseStyle, color: '#e0dcd2', dash: false, lineWidth: 2 };
         case 'line':
         case 'ray':
-            return { ...baseStyle, color: '#e0dcd2', dash: false, lineWidth: 2 };
+            return { ...baseStyle, color: '#e0dcd2', dash: true, lineWidth: 2 };
         case 'triangle':
         case 'polygon':
             return { ...baseStyle, color: '#c9a04a', opacity: 0.3 };
