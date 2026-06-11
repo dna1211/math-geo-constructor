@@ -565,44 +565,48 @@ function autoComplete(input) {
     if (!match) return;
 
     const partial = match[0];
-    if (partial.length < 3) return;  // 至少 3 个字符才触发补全
     const startPos = cursorPos - partial.length;
+    const lowerPartial = partial.toLowerCase();
 
-    // 获取所有可能的补全项
-    const candidates = [];
-
-    // 对象名称（大小写不敏感）
-    store.getNames().forEach(name => {
-        if (name.toLowerCase().startsWith(partial.toLowerCase())) {
-            candidates.push(name);
-        }
-    });
-
-    // 命令名称
+    // 命令列表
     const commands = ['Point', 'Segment', 'Line', 'Ray', 'Triangle', 'Polygon', 'Plane',
                       'Midpoint', 'Fold', 'Reflect', 'Distance',
                       'Color', 'Dash', 'Opacity', 'Hide', 'Show', 'Label',
                       'Delete', 'Undo', 'Redo', 'Clear', 'Grid', 'Axis'];
-    commands.forEach(cmd => {
-        if (cmd.toLowerCase().startsWith(partial.toLowerCase())) {
-            candidates.push(cmd);
-        }
-    });
 
-    if (candidates.length === 0) return;
+    // 优先匹配命令
+    const cmdMatches = commands.filter(cmd => cmd.toLowerCase().startsWith(lowerPartial));
 
-    // 找到公共前缀
-    let commonPrefix = candidates[0];
-    for (let i = 1; i < candidates.length; i++) {
-        while (!candidates[i].startsWith(commonPrefix)) {
-            commonPrefix = commonPrefix.slice(0, -1);
+    if (cmdMatches.length > 0) {
+        let prefix = cmdMatches[0];
+        for (let i = 1; i < cmdMatches.length; i++) {
+            while (!cmdMatches[i].toLowerCase().startsWith(prefix.toLowerCase())) {
+                prefix = prefix.slice(0, -1);
+            }
         }
+        const completion = prefix.slice(partial.length);
+        if (completion) {
+            input.value = value.substring(0, startPos) + partial + completion + value.substring(cursorPos);
+            input.selectionStart = input.selectionEnd = cursorPos + completion.length;
+        }
+        return;
     }
 
-    // 补全
-    const completion = commonPrefix.slice(partial.length);
-    input.value = value.substring(0, startPos) + partial + completion + value.substring(cursorPos);
-    input.selectionStart = input.selectionEnd = cursorPos + completion.length;
+    // 命令无匹配时，匹配对象名称
+    const objMatches = store.getNames().filter(name => name.toLowerCase().startsWith(lowerPartial));
+    if (objMatches.length === 0) return;
+
+    let prefix = objMatches[0];
+    for (let i = 1; i < objMatches.length; i++) {
+        while (!objMatches[i].toLowerCase().startsWith(prefix.toLowerCase())) {
+            prefix = prefix.slice(0, -1);
+        }
+    }
+    const completion = prefix.slice(partial.length);
+    if (completion) {
+        input.value = value.substring(0, startPos) + partial + completion + value.substring(cursorPos);
+        input.selectionStart = input.selectionEnd = cursorPos + completion.length;
+    }
 }
 
 // ===== 启动 =====
