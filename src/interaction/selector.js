@@ -72,12 +72,24 @@ export class Selector {
         // 保存原始材质
         this.originalMaterials.set(name, mesh.material);
 
-        // 创建高亮材质
-        const highlightMat = mesh.material.clone();
-        highlightMat.emissive = new THREE.Color(0x55ccee);
-        highlightMat.emissiveIntensity = 0.5;
+        // 根据材质类型选择高亮方式
+        const isLine = mesh.material.isLineBasicMaterial || mesh.material.isLineDashedMaterial;
 
-        mesh.material = highlightMat;
+        if (isLine) {
+            // 线型对象：用颜色变亮方式高亮（emissive 对 LineBasicMaterial 无效）
+            const highlightMat = mesh.material.clone();
+            const origColor = mesh.material.color.clone();
+            // 提亮颜色
+            highlightMat.color = origColor.clone().lerp(new THREE.Color(0xffffff), 0.5);
+            mesh.material = highlightMat;
+        } else {
+            // 面型/点型对象：使用 emissive 高亮
+            const highlightMat = mesh.material.clone();
+            highlightMat.emissive = new THREE.Color(0x55ccee);
+            highlightMat.emissiveIntensity = 0.5;
+            mesh.material = highlightMat;
+        }
+
         this.highlighted = name;
 
         // 点对象放大
