@@ -63,6 +63,17 @@ export class GeomRenderer {
      * 更新对象
      */
     renderUpdate(obj) {
+        // 点对象：直接更新位置，避免销毁重建的开销
+        if (obj.type === 'point' && obj.renderRef) {
+            obj.renderRef.position.set(obj.data.x, obj.data.y, obj.data.z);
+            if (this.labelRenderer) {
+                const labelPos = new THREE.Vector3(obj.data.x, obj.data.y + 0.15, obj.data.z);
+                this.labelRenderer.updateLabelPosition(obj.name, labelPos);
+            }
+            return;
+        }
+
+        // 其他对象：销毁重建
         this.renderRemove(obj);
         this.renderCreate(obj);
     }
