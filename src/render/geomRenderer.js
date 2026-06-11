@@ -307,18 +307,39 @@ export class GeomRenderer {
 
         if (points.some(p => !p)) return null;
 
-        // 使用 BufferGeometry 构建 3D 多边形（三角扇）
+        // 投影到 2D 进行三角化（支持凹多边形）
+        // 计算多边形所在平面的法向量
+        const normal = new THREE.Vector3();
+        if (points.length >= 3) {
+            const v1 = new THREE.Vector3().subVectors(points[1], points[0]);
+            const v2 = new THREE.Vector3().subVectors(points[2], points[0]);
+            normal.crossVectors(v1, v2).normalize();
+        }
+
+        // 构建 2D 投影坐标
+        // 选择投影轴：法向量分量最大的轴被丢弃
+        const absNormal = new THREE.Vector3(Math.abs(normal.x), Math.abs(normal.y), Math.abs(normal.z));
+        let projPoints;
+        if (absNormal.z >= absNormal.x && absNormal.z >= absNormal.y) {
+            // 投影到 XY 平面
+            projPoints = points.map(p => new THREE.Vector2(p.x, p.y));
+        } else if (absNormal.y >= absNormal.x) {
+            // 投影到 XZ 平面
+            projPoints = points.map(p => new THREE.Vector2(p.x, p.z));
+        } else {
+            // 投影到 YZ 平面
+            projPoints = points.map(p => new THREE.Vector2(p.y, p.z));
+        }
+
+        // 使用 Three.js 的 ShapeUtils 进行耳切法三角化
+        const indices = THREE.ShapeUtils.triangulateShape(projPoints, []);
+
         const geometry = new THREE.BufferGeometry();
         const vertices = [];
-
-        // 使用第一个顶点作为中心，构建三角扇
-        const center = points[0];
-        for (let i = 1; i < points.length - 1; i++) {
-            vertices.push(
-                center.x, center.y, center.z,
-                points[i].x, points[i].y, points[i].z,
-                points[i + 1].x, points[i + 1].y, points[i + 1].z
-            );
+        for (const tri of indices) {
+            for (const idx of tri) {
+                vertices.push(points[idx].x, points[idx].y, points[idx].z);
+            }
         }
 
         geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
