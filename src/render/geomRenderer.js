@@ -315,7 +315,15 @@ export class GeomRenderer {
             side: THREE.DoubleSide
         });
 
-        return new THREE.Mesh(geometry, material);
+        // 面 + 边线
+        const group = new THREE.Group();
+        group.add(new THREE.Mesh(geometry, material));
+
+        const edgeGeo = new THREE.EdgesGeometry(geometry);
+        const edgeMat = new THREE.LineBasicMaterial({ color: obj.style.color || '#c9a04a' });
+        group.add(new THREE.LineSegments(edgeGeo, edgeMat));
+
+        return group;
     }
 
     /**
@@ -375,7 +383,15 @@ export class GeomRenderer {
             side: THREE.DoubleSide
         });
 
-        return new THREE.Mesh(geometry, material);
+        // 面 + 边线
+        const group = new THREE.Group();
+        group.add(new THREE.Mesh(geometry, material));
+
+        const edgeGeo = new THREE.EdgesGeometry(geometry);
+        const edgeMat = new THREE.LineBasicMaterial({ color: obj.style.color || '#c9a04a' });
+        group.add(new THREE.LineSegments(edgeGeo, edgeMat));
+
+        return group;
     }
 
     /**
