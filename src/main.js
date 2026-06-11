@@ -189,6 +189,33 @@ function bindUI() {
         }
     });
 
+    // 主题切换
+    const btnTheme = document.getElementById('btn-theme');
+    const THEME_KEY = 'geometry-tool-theme';
+
+    function applyTheme(theme) {
+        if (theme === 'light') {
+            document.documentElement.setAttribute('data-theme', 'light');
+            btnTheme.textContent = '☀️';
+            btnTheme.title = '切换为暗色主题';
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+            btnTheme.textContent = '🌙';
+            btnTheme.title = '切换为浅色主题';
+        }
+    }
+
+    // 读取保存的主题偏好
+    const savedTheme = localStorage.getItem(THEME_KEY) || 'dark';
+    applyTheme(savedTheme);
+
+    btnTheme.addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-theme');
+        const next = current === 'light' ? 'dark' : 'light';
+        applyTheme(next);
+        localStorage.setItem(THEME_KEY, next);
+    });
+
     // 执行按钮
     btnExecute.addEventListener('click', () => {
         const value = input.value.trim();
