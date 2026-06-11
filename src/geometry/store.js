@@ -75,6 +75,14 @@ export class ObjectStore {
             throw new Error(`对象 "${name}" 不存在`);
         }
 
+        // 清理子对象的父引用（防止依赖图不一致）
+        const children = this.dependents.get(name);
+        if (children) {
+            for (const childName of children) {
+                this.parents.get(childName)?.delete(name);
+            }
+        }
+
         // 断开依赖关系
         for (const parent of obj.parents) {
             this.dependents.get(parent)?.delete(name);
