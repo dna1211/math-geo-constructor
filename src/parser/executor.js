@@ -622,7 +622,24 @@ export class Executor {
             return {
                 type: 'point',
                 data: result,
-                parents: [pointName, targetName]
+                parents: [pointName, targetName],
+                compute: (store) => {
+                    const p = store.get(pointName);
+                    const t = store.get(targetName);
+                    if (!p || !t) return null;
+                    let pd;
+                    if (t.data.points) {
+                        const pts = t.data.points.map(n => {
+                            const pt = store.get(n);
+                            return pt ? pt.data : null;
+                        });
+                        if (pts.some(pp => !pp)) return null;
+                        pd = { points: pts };
+                    } else {
+                        pd = t.data;
+                    }
+                    return calc.reflectPlane(p.data, pd);
+                }
             };
         }
 
