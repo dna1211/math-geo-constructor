@@ -275,6 +275,11 @@ export class SceneManager {
         const frustumSize = 10;
         const isOrtho = this.camera.isOrthographicCamera;
 
+        // 保存当前相机状态
+        const savedPosition = this.camera.position.clone();
+        const savedRotation = this.camera.rotation.clone();
+        const savedUp = this.camera.up.clone();
+
         if (isOrtho) {
             // 切换到透视投影
             this.camera = new THREE.PerspectiveCamera(50, aspect, 0.1, 1000);
@@ -290,9 +295,10 @@ export class SceneManager {
             );
         }
 
-        this.camera.position.set(10, 5, 8);
-        this.camera.lookAt(0, 0, 0);
-        this.camera.up.set(0, 0, 1);
+        // 恢复相机状态
+        this.camera.position.copy(savedPosition);
+        this.camera.rotation.copy(savedRotation);
+        this.camera.up.copy(savedUp);
         this.controls.object = this.camera;
 
         // 更新 labelRenderer 的相机引用
