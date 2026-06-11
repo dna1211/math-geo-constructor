@@ -296,15 +296,16 @@ function bindUI() {
             const name = hit.userData?.objectName || hit.parent?.userData?.objectName;
 
             if (toolManager.isIdle()) {
-                // 选择模式
+                // 选择模式：只选择，不拖拽
                 selector.select(name);
                 updateProperties(name);
-
-                // 开始拖拽（如果是点）
+            } else if (toolManager.isDragging()) {
+                // 拖拽模式：点击点后可拖拽
                 const obj = store.get(name);
                 if (obj && obj.type === 'point') {
+                    selector.select(name);
+                    updateProperties(name);
                     dragger.startDrag(name, e.clientX, e.clientY, canvas);
-                    // 禁用 OrbitControls
                     sceneManager.controls.enabled = false;
                 }
             } else if (toolManager.isPlacingPoint()) {

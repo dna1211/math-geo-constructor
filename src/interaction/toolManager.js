@@ -4,7 +4,8 @@
  */
 
 export const ToolState = {
-    IDLE: 'idle',                    // 默认，可选择/拖拽
+    IDLE: 'idle',                    // 默认，可选择
+    DRAG: 'drag',                    // 拖拽模式，点击点后可拖拽
     PLACING_POINT: 'placing',        // 画点模式，点击放置
     DRAWING_LINE: 'drawing',         // 画线模式，依次选两点
     DRAWING_POLYGON: 'polygon'       // 画面模式，依次选点，双击闭合
@@ -50,7 +51,7 @@ export class ToolManager {
                 this.state = ToolState.DRAWING_POLYGON;
                 break;
             case 'drag':
-                this.state = ToolState.IDLE;
+                this.state = ToolState.DRAG;
                 break;
             default:
                 this.state = ToolState.IDLE;
@@ -122,5 +123,13 @@ export class ToolManager {
      */
     isIdle() {
         return this.state === ToolState.IDLE;
+    }
+
+    /**
+     * 检查是否在拖拽模式
+     * @returns {boolean}
+     */
+    isDragging() {
+        return this.state === ToolState.DRAG;
     }
 }
