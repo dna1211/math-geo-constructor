@@ -77,6 +77,20 @@ export class PropPanel {
                     <label>颜色</label>
                     <input type="color" value="${obj.style.color || '#e0dcd2'}" data-prop="color">
                 </div>
+        `;
+
+        // 线宽（仅线段、直线、射线）- 放在颜色旁边
+        if (['segment', 'line', 'ray'].includes(obj.type)) {
+            const lw = obj.style.lineWidth || 2;
+            html += `
+                <div class="style-item">
+                    <label>线宽</label>
+                    <input type="number" min="1" max="10" step="0.5" value="${lw}" data-prop="lineWidth" class="lw-input">
+                </div>
+            `;
+        }
+
+        html += `
                 <div class="style-item">
                     <label>可见</label>
                     <input type="checkbox" ${obj.style.visible !== false ? 'checked' : ''} data-prop="visible">
@@ -95,18 +109,6 @@ export class PropPanel {
 
         html += '</div>';
 
-        // 线宽（仅线段、直线、射线）
-        if (['segment', 'line', 'ray'].includes(obj.type)) {
-            const lw = obj.style.lineWidth || 2;
-            html += `
-                <div class="prop-linewidth">
-                    <label>线宽</label>
-                    <input type="range" min="1" max="10" step="0.5" value="${lw}" data-prop="lineWidth">
-                    <span class="lw-value">${lw}</span>
-                </div>
-            `;
-        }
-
         this.content.innerHTML = html;
 
         // 绑定属性修改事件
@@ -123,9 +125,6 @@ export class PropPanel {
                 } else if (prop === 'lineWidth') {
                     value = parseFloat(value);
                     this.store.update(name, { style: { lineWidth: value } });
-                    // 更新滑块旁的数值显示
-                    const span = e.target.parentElement.querySelector('.lw-value');
-                    if (span) span.textContent = value;
                 } else if (prop === 'dash') {
                     this.store.update(name, { style: { dash: value } });
                 } else if (prop === 'visible') {
@@ -134,10 +133,6 @@ export class PropPanel {
             };
 
             input.addEventListener('change', handleUpdate);
-            // range 滑块实时更新
-            if (input.type === 'range') {
-                input.addEventListener('input', handleUpdate);
-            }
         });
     }
 }
