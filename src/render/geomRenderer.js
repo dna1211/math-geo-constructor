@@ -514,6 +514,67 @@ export class GeomRenderer {
     }
 
     /**
+     * 淡入动画
+     * @param {THREE.Object3D} object - Three.js对象
+     * @param {number} duration - 动画时长（毫秒）
+     */
+    fadeIn(object, duration = 500) {
+        if (!object) return;
+
+        // 处理 Group 对象（如三角形、多边形）
+        if (object.isGroup) {
+            object.children.forEach(child => this.fadeIn(child, duration));
+            return;
+        }
+
+        if (!object.material) return;
+
+        // 设置透明属性
+        object.material.transparent = true;
+        object.material.opacity = 0;
+        object.visible = true;
+
+        const startTime = Date.now();
+
+        const animate = () => {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+
+            object.material.opacity = progress;
+
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                // 动画完成，恢复非透明（如果不原本就是透明的）
+                const originalOpacity = object.material.userData?.originalOpacity;
+                if (originalOpacity === undefined || originalOpacity >= 1) {
+                    object.material.transparent = false;
+                    object.material.opacity = 1;
+                }
+            }
+        };
+
+        animate();
+    }
+
+    /**
+     * 批量淡入多个对象
+     * @param {Array} objects - 对象数组（可以是对象引用或对象名称）
+     * @param {number} stagger - 每个对象的延迟（毫秒）
+     */
+    fadeInMultiple(objects, stagger = 50) {
+        objects.forEach((obj, index) => {
+            // 支持对象引用或对象名称
+            const renderObj = typeof obj === 'string' ? this.store.get(obj)?.renderRef : obj.renderRef;
+            if (renderObj) {
+                setTimeout(() => {
+                    this.fadeIn(renderObj);
+                }, index * stagger);
+            }
+        });
+    }
+
+    /**
      * 释放对象资源
      */
     disposeObject(obj) {
