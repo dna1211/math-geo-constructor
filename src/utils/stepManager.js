@@ -62,10 +62,8 @@ export class StepManager {
             }
         }
 
-        // 保存最后一个步骤
-        if (currentStep.commands.length > 0) {
-            this.steps.push(currentStep);
-        }
+        // 保存最后一个步骤（即使没有命令也保存，以保留步骤标记）
+        this.steps.push(currentStep);
 
         // 更新步骤ID
         this.steps.forEach((step, index) => {
@@ -211,6 +209,16 @@ export class StepManager {
     prevStep() {
         if (this.isFirstStep()) return;
         this.executeToStep(this.currentStepIndex - 1);
+    }
+
+    /**
+     * 跳转到指定步骤
+     * @param {number} stepIndex - 目标步骤索引
+     */
+    goToStep(stepIndex) {
+        if (this.steps.length === 0) return;
+        if (stepIndex < 0 || stepIndex >= this.steps.length) return;
+        this.executeToStep(stepIndex);
     }
 
     /**
