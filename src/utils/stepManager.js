@@ -4,6 +4,8 @@
  */
 
 import * as THREE from 'three';
+import { tokenize } from '../parser/tokenizer.js';
+import { parse } from '../parser/parser.js';
 
 export class StepManager {
     constructor(store, bus, executor) {
@@ -98,8 +100,8 @@ export class StepManager {
                 const beforeNames = new Set(this.store.getNames());
 
                 // 执行命令
-                const tokens = this.executor.tokenize(cmd);
-                const ast = this.executor.parse(tokens);
+                const tokens = tokenize(cmd);
+                const ast = parse(tokens);
 
                 for (const node of ast) {
                     this.executor.execute(node);

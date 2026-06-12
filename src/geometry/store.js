@@ -25,7 +25,7 @@ export class ObjectStore {
     /**
      * 注册对象
      * @param {string} name - 对象名称
-     * @param {Object} definition - 对象定义 { type, data, style?, parents? }
+     * @param {Object} definition - 对象定义 { type, data, style?, parents?, stepId? }
      * @returns {Object} 注册的对象
      */
     register(name, definition) {
@@ -49,6 +49,9 @@ export class ObjectStore {
         if (definition.compute) {
             obj.compute = definition.compute;
         }
+
+        // 设置步骤ID（用于步骤模式）
+        obj.stepId = definition.stepId !== undefined ? definition.stepId : -1;
 
         this.objects.set(name, obj);
 
@@ -262,5 +265,35 @@ export class ObjectStore {
      */
     size() {
         return this.objects.size;
+    }
+
+    /**
+     * 获取指定步骤的对象
+     * @param {number} stepId - 步骤ID
+     * @returns {Array} 对象数组
+     */
+    getObjectsByStep(stepId) {
+        const result = [];
+        for (const [name, obj] of this.objects) {
+            if (obj.stepId === stepId) {
+                result.push(obj);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * 获取指定步骤及之前的所有对象
+     * @param {number} stepId - 步骤ID
+     * @returns {Array} 对象数组
+     */
+    getObjectsUpToStep(stepId) {
+        const result = [];
+        for (const [name, obj] of this.objects) {
+            if (obj.stepId <= stepId) {
+                result.push(obj);
+            }
+        }
+        return result;
     }
 }
