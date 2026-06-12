@@ -46,11 +46,11 @@ export class StepManager {
             const stepMatch = trimmed.match(/^---step\s+(.+?)---$/);
 
             if (stepMatch) {
-                // 保存当前步骤（如果有命令）
+                // 保存当前步骤（如果有命令，或者是初始的"准备"步骤且有内容）
                 if (currentStep.commands.length > 0) {
                     this.steps.push(currentStep);
                 }
-                // 创建新步骤
+                // 创建新步骤（使用用户指定的名称）
                 currentStep = {
                     name: stepMatch[1],
                     commands: [],
@@ -62,8 +62,10 @@ export class StepManager {
             }
         }
 
-        // 保存最后一个步骤（即使没有命令也保存，以保留步骤标记）
-        this.steps.push(currentStep);
+        // 保存最后一个步骤（如果有命令）
+        if (currentStep.commands.length > 0) {
+            this.steps.push(currentStep);
+        }
 
         // 更新步骤ID
         this.steps.forEach((step, index) => {
