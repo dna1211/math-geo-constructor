@@ -56,6 +56,14 @@ npm run dev
 ```bash
 npm run build
 ```
+## git 仓库
+
+```bash
+export http_proxy="http://127.0.0.1:7890" https_proxy="http://127.0.0.1:7890"
+git push origin main
+git pull origin main
+git clone https://github.com/yourusername/math-geo-constructor.git
+```
 
 ## 支持的命令
 
