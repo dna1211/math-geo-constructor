@@ -123,9 +123,24 @@
 
         <!-- 右侧属性面板 -->
         <aside id="properties">
-            <h3>属性面板</h3>
-            <div id="prop-content">
-                <p class="placeholder">选择对象查看属性</p>
+            <div id="prop-section">
+                <h3>属性</h3>
+                <div id="prop-content">
+                    <p class="placeholder">选择对象查看属性</p>
+                </div>
+            </div>
+            <div id="step-section">
+                <h3>步骤控制</h3>
+                <div class="step-controls">
+                    <button id="btn-step-first" class="step-btn" title="首步" disabled>⏮</button>
+                    <button id="btn-step-prev" class="step-btn" title="上步" disabled>◀</button>
+                    <span id="step-counter" class="step-counter">0 / 0</span>
+                    <button id="btn-step-next" class="step-btn" title="下步" disabled>▶</button>
+                    <button id="btn-step-last" class="step-btn" title="末步" disabled>⏭</button>
+                </div>
+                <div id="step-list" class="step-list">
+                    <p class="placeholder">输入包含步骤标记的命令</p>
+                </div>
             </div>
         </aside>
     </main>
