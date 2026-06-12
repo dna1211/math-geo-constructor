@@ -26,6 +26,8 @@ export class StepManager {
 
         // 监听清空事件，重置步骤管理器
         this.bus.on('store:cleared', () => {
+            // 如果是 clearAndReexecuteTo 触发的，跳过重置
+            if (this._skipReset) return;
             this.reset();
         });
     }
@@ -182,8 +184,14 @@ export class StepManager {
      * @param {number} targetIndex - 目标步骤索引
      */
     clearAndReexecuteTo(targetIndex) {
+        // 临时标记：跳过 store:cleared 事件处理
+        this._skipReset = true;
+
         // 清空所有对象
         this.store.clear();
+
+        // 恢复标记
+        this._skipReset = false;
 
         // 重新执行到目标步骤
         for (let i = 0; i <= targetIndex; i++) {

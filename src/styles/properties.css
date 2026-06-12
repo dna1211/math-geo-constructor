@@ -1,17 +1,17 @@
 /* ===== 属性面板 ===== */
 #properties {
-    width: 280px;
+    width: 300px;
     background: var(--bg-secondary);
     border-left: 1px solid var(--border);
-    padding: 12px;
+    padding: 10px;
     display: flex;
     flex-direction: column;
 }
 
 #properties h3 {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
     color: var(--text-secondary);
 }
 
@@ -19,26 +19,60 @@
     font-size: 12px;
     color: var(--text-secondary);
     text-align: center;
-    padding: 16px;
+    padding: 12px;
 }
 
+/* 只读信息行（名称、类型）- 同行显示 */
+.prop-info-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 6px;
+}
+
+.prop-info {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    flex: 1;
+    min-width: 0;
+}
+
+.prop-info .label {
+    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+
+.prop-info .value {
+    color: var(--text);
+    background: var(--bg-tertiary);
+    padding: 2px 6px;
+    border-radius: 3px;
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 可编辑属性行 */
 .prop-row {
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .prop-row label {
     display: block;
     font-size: 11px;
     color: var(--text-secondary);
-    margin-bottom: 4px;
+    margin-bottom: 2px;
 }
 
 .prop-row input {
     width: 100%;
-    padding: 4px 8px;
+    padding: 3px 6px;
     background: var(--bg-tertiary);
     border: 1px solid var(--border);
-    border-radius: 4px;
+    border-radius: 3px;
     color: var(--text);
     font-size: 12px;
 }
@@ -48,10 +82,94 @@
     border-color: var(--accent);
 }
 
-.prop-row input[type="range"] {
+/* XYZ 坐标行 - 横向排列 */
+.prop-coords {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.prop-coords .coord-item {
+    flex: 1;
+}
+
+.prop-coords .coord-item label {
+    display: block;
+    font-size: 10px;
+    color: var(--text-secondary);
+    margin-bottom: 1px;
+    text-align: center;
+}
+
+.prop-coords .coord-item input {
+    width: 100%;
+    padding: 3px 4px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    color: var(--text);
+    font-size: 12px;
+    text-align: center;
+}
+
+.prop-coords .coord-item input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+/* 颜色和复选框行 - 横向排列 */
+.prop-style {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 6px;
+}
+
+.prop-style .style-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.prop-style .style-item label {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.prop-style input[type="color"] {
+    width: 28px;
+    height: 22px;
+    padding: 1px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.prop-style input[type="checkbox"] {
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+}
+
+/* 线宽行 */
+.prop-linewidth {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+}
+
+.prop-linewidth label {
+    font-size: 11px;
+    color: var(--text-secondary);
+    flex-shrink: 0;
+}
+
+.prop-linewidth input[type="range"] {
     -webkit-appearance: none;
     appearance: none;
-    width: calc(100% - 36px);
+    flex: 1;
     height: 4px;
     padding: 0;
     margin: 0;
@@ -59,43 +177,35 @@
     border: none;
     border-radius: 2px;
     cursor: pointer;
-    vertical-align: middle;
     outline: none;
 }
 
-.prop-row input[type="range"]::-webkit-slider-thumb {
+.prop-linewidth input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
     background: var(--accent);
     cursor: pointer;
-    margin-top: -5px;
 }
 
-.prop-row input[type="range"]::-webkit-slider-runnable-track {
+.prop-linewidth input[type="range"]::-webkit-slider-runnable-track {
     height: 4px;
     background: transparent;
     border-radius: 2px;
 }
 
-.lw-value {
-    display: inline-block;
-    width: 30px;
+.prop-linewidth .lw-value {
+    width: 24px;
     text-align: right;
     font-size: 11px;
     color: var(--text-secondary);
-    vertical-align: middle;
-    height: 20px;
-    line-height: 20px;
 }
 
 #prop-section {
     flex-shrink: 0;
-    max-height: 200px;
-    overflow-y: auto;
     border-bottom: 1px solid var(--border);
-    padding-bottom: 12px;
-    margin-bottom: 12px;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
 }

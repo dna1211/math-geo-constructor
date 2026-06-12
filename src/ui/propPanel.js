@@ -26,8 +26,6 @@ export class PropPanel {
         });
 
         this.bus.on('object:deleted', ({ name }) => {
-            // 如果删除的是当前选中的对象，清空属性面板
-            // 注意：这里需要外部传入 selector 来检查
             this.update(null);
         });
     }
@@ -49,28 +47,65 @@ export class PropPanel {
 
         let html = '';
 
-        // 基本信息（转义防止 XSS）
-        html += `<div class="prop-row"><label>名称</label><input type="text" value="${escapeHtml(obj.name)}" readonly></div>`;
-        html += `<div class="prop-row"><label>类型</label><input type="text" value="${escapeHtml(obj.type)}" readonly></div>`;
+        // 只读信息（名称、类型）- 同一行显示
+        html += `<div class="prop-info-row"><span class="prop-info"><span class="label">名称</span><span class="value">${escapeHtml(obj.name)}</span></span><span class="prop-info"><span class="label">类型</span><span class="value">${escapeHtml(obj.type)}</span></span></div>`;
 
-        // 坐标（点对象）
+        // 坐标（点对象）- 横向排列
         if (obj.type === 'point') {
-            html += `<div class="prop-row"><label>X</label><input type="number" step="0.1" value="${obj.data.x}" data-prop="x"></div>`;
-            html += `<div class="prop-row"><label>Y</label><input type="number" step="0.1" value="${obj.data.y}" data-prop="y"></div>`;
-            html += `<div class="prop-row"><label>Z</label><input type="number" step="0.1" value="${obj.data.z}" data-prop="z"></div>`;
+            html += `
+                <div class="prop-coords">
+                    <div class="coord-item">
+                        <label>X</label>
+                        <input type="number" step="0.1" value="${obj.data.x}" data-prop="x">
+                    </div>
+                    <div class="coord-item">
+                        <label>Y</label>
+                        <input type="number" step="0.1" value="${obj.data.y}" data-prop="y">
+                    </div>
+                    <div class="coord-item">
+                        <label>Z</label>
+                        <input type="number" step="0.1" value="${obj.data.z}" data-prop="z">
+                    </div>
+                </div>
+            `;
         }
 
-        // 样式
-        html += `<div class="prop-row"><label>颜色</label><input type="color" value="${obj.style.color || '#e0dcd2'}" data-prop="color"></div>`;
+        // 样式选项 - 横向排列
+        html += `
+            <div class="prop-style">
+                <div class="style-item">
+                    <label>颜色</label>
+                    <input type="color" value="${obj.style.color || '#e0dcd2'}" data-prop="color">
+                </div>
+                <div class="style-item">
+                    <label>可见</label>
+                    <input type="checkbox" ${obj.style.visible !== false ? 'checked' : ''} data-prop="visible">
+                </div>
+        `;
 
-        // 线宽和虚线（仅线段、直线、射线）
+        // 虚线（仅线段、直线、射线）
+        if (['segment', 'line', 'ray'].includes(obj.type)) {
+            html += `
+                <div class="style-item">
+                    <label>虚线</label>
+                    <input type="checkbox" ${obj.style.dash ? 'checked' : ''} data-prop="dash">
+                </div>
+            `;
+        }
+
+        html += '</div>';
+
+        // 线宽（仅线段、直线、射线）
         if (['segment', 'line', 'ray'].includes(obj.type)) {
             const lw = obj.style.lineWidth || 2;
-            html += `<div class="prop-row"><label>线宽</label><input type="range" min="1" max="10" step="0.5" value="${lw}" data-prop="lineWidth"><span class="lw-value">${lw}</span></div>`;
-            html += `<div class="prop-row"><label>虚线</label><input type="checkbox" ${obj.style.dash ? 'checked' : ''} data-prop="dash"></div>`;
+            html += `
+                <div class="prop-linewidth">
+                    <label>线宽</label>
+                    <input type="range" min="1" max="10" step="0.5" value="${lw}" data-prop="lineWidth">
+                    <span class="lw-value">${lw}</span>
+                </div>
+            `;
         }
-
-        html += `<div class="prop-row"><label>可见</label><input type="checkbox" ${obj.style.visible !== false ? 'checked' : ''} data-prop="visible"></div>`;
 
         this.content.innerHTML = html;
 
