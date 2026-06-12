@@ -19,6 +19,7 @@ import { ToolManager } from './interaction/toolManager.js';
 import { HistoryManager } from './geometry/history.js';
 import { StorageManager } from './storage.js';
 import { getThemeManager } from './utils/themeManager.js';
+import { StepManager } from './utils/stepManager.js';
 
 // ===== 初始化 =====
 // 初始化主题管理器
@@ -29,6 +30,9 @@ const store = new ObjectStore(bus);
 const history = new HistoryManager(store, bus);
 const storage = new StorageManager(store, bus);
 const executor = new Executor(store, bus, history);
+
+// 步骤管理器
+const stepManager = new StepManager(store, bus, executor);
 
 // 标签渲染器
 const viewport = document.getElementById('viewport');
@@ -81,26 +85,38 @@ function executeCommand(input) {
     const feedback = document.getElementById('command-feedback');
 
     try {
-        // 1. 词法分析
-        const tokens = tokenize(input);
+        // 检查是否包含步骤标记
+        const hasStepMarkers = input.includes('---step');
 
-        // 2. 语法解析
-        const ast = parse(tokens);
+        if (hasStepMarkers) {
+            // 步骤模式：解析步骤并只执行第一步
+            const commands = input.split('\n').filter(line => line.trim());
+            stepManager.parseSteps(commands);
+            stepManager.goToStep(0);
 
-        // 3. 执行
-        for (const node of ast) {
-            executor.execute(node);
+            // 更新步骤面板
+            updateStepPanel();
+
+            feedback.textContent = `✓ 已解析 ${stepManager.getStepCount()} 个步骤`;
+            feedback.className = 'success';
+        } else {
+            // 普通模式：直接执行
+            const tokens = tokenize(input);
+            const ast = parse(tokens);
+
+            for (const node of ast) {
+                executor.execute(node);
+            }
+
+            feedback.textContent = `✓ 执行成功`;
+            feedback.className = 'success';
         }
 
-        // 4. 记录历史
+        // 记录历史
         commandHistory.add(input);
 
-        // 5. 显示成功
+        // 3秒后清除
         if (feedbackTimer) clearTimeout(feedbackTimer);
-        feedback.textContent = `✓ 执行成功`;
-        feedback.className = 'success';
-
-        // 3 秒后清除
         feedbackTimer = setTimeout(() => {
             feedback.textContent = '';
             feedback.className = '';
@@ -117,6 +133,104 @@ function executeCommand(input) {
 // HTML 转义
 function escapeHtml(str) {
     return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ===== 步骤面板 =====
+function updateStepPanel() {
+    const stepList = document.getElementById('step-list');
+    const stepCounter = document.getElementById('step-counter');
+    const btnPrev = document.getElementById('btn-step-prev');
+    const btnNext = document.getElementById('btn-step-next');
+    const btnFirst = document.getElementById('btn-step-first');
+    const btnLast = document.getElementById('btn-step-last');
+
+    if (!stepList) return;
+
+    // 更新步骤列表
+    stepList.innerHTML = '';
+
+    if (stepManager.steps.length === 0) {
+        stepList.innerHTML = '<p class="placeholder">输入包含步骤标记的命令</p>';
+    } else {
+        stepManager.steps.forEach((step, index) => {
+            const div = document.createElement('div');
+            div.className = 'step-item';
+
+            if (index < stepManager.currentStepIndex) {
+                div.classList.add('executed');
+            } else if (index === stepManager.currentStepIndex) {
+                div.classList.add('current');
+            } else {
+                div.classList.add('pending');
+            }
+
+            const icon = index <= stepManager.currentStepIndex ? '✓' : '○';
+            div.innerHTML = `
+                <span class="step-icon">${icon}</span>
+                <span class="step-name">${escapeHtml(step.name)}</span>
+            `;
+
+            stepList.appendChild(div);
+        });
+    }
+
+    // 更新计数器
+    if (stepCounter) {
+        if (stepManager.steps.length === 0) {
+            stepCounter.textContent = '0 / 0';
+        } else {
+            stepCounter.textContent = `${stepManager.currentStepIndex + 1} / ${stepManager.getStepCount()}`;
+        }
+    }
+
+    // 更新按钮状态
+    const isFirst = stepManager.isFirstStep();
+    const isLast = stepManager.isLastStep();
+    const noSteps = stepManager.steps.length === 0;
+
+    if (btnPrev) btnPrev.disabled = isFirst || noSteps;
+    if (btnNext) btnNext.disabled = isLast || noSteps;
+    if (btnFirst) btnFirst.disabled = isFirst || noSteps;
+    if (btnLast) btnLast.disabled = isLast || noSteps;
+}
+
+function bindStepControls() {
+    const btnFirst = document.getElementById('btn-step-first');
+    const btnPrev = document.getElementById('btn-step-prev');
+    const btnNext = document.getElementById('btn-step-next');
+    const btnLast = document.getElementById('btn-step-last');
+
+    if (btnFirst) {
+        btnFirst.addEventListener('click', () => {
+            if (stepManager.steps.length === 0) return;
+            stepManager.goToFirst();
+            updateStepPanel();
+        });
+    }
+
+    if (btnPrev) {
+        btnPrev.addEventListener('click', () => {
+            if (stepManager.steps.length === 0) return;
+            stepManager.prevStep();
+            updateStepPanel();
+        });
+    }
+
+    if (btnNext) {
+        btnNext.addEventListener('click', () => {
+            if (stepManager.steps.length === 0) return;
+            stepManager.nextStep();
+            updateStepPanel();
+        });
+    }
+
+    if (btnLast) {
+        btnLast.addEventListener('click', () => {
+            if (stepManager.steps.length === 0) return;
+            stepManager.goToLast();
+            updateStepPanel();
+        });
+    }
 }
 
 // ===== 属性面板更新 =====
@@ -520,6 +634,27 @@ function bindUI() {
         } else {
             sceneManager.toggleAxes();
         }
+    });
+
+    // 绑定步骤控制按钮
+    bindStepControls();
+
+    // 监听步骤事件
+    bus.on('steps:parsed', () => {
+        updateStepPanel();
+    });
+
+    bus.on('step:changed', ({ newObjects }) => {
+        updateStepPanel();
+
+        // 对新对象执行淡入动画
+        if (newObjects && newObjects.length > 0) {
+            stepManager.fadeInMultiple(newObjects);
+        }
+    });
+
+    bus.on('step:executed', () => {
+        updateStepPanel();
     });
 }
 
