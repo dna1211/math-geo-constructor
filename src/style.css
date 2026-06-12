@@ -134,10 +134,12 @@ body {
 
 /* ===== 属性面板 ===== */
 #properties {
-    width: 220px;
+    width: 280px;
     background: var(--bg-secondary);
     border-left: 1px solid var(--border);
     padding: 12px;
+    display: flex;
+    flex-direction: column;
 }
 
 #properties h3 {
@@ -147,9 +149,12 @@ body {
     color: var(--text-secondary);
 }
 
-#prop-content .placeholder {
+#prop-content .placeholder,
+.step-list .placeholder {
     font-size: 12px;
     color: var(--text-secondary);
+    text-align: center;
+    padding: 16px;
 }
 
 .prop-row {
@@ -464,4 +469,121 @@ body {
     color: var(--text-secondary);
     margin-top: 4px;
     font-style: italic;
+}
+
+/* ===== 步骤面板 ===== */
+#prop-section {
+    flex-shrink: 0;
+    max-height: 200px;
+    overflow-y: auto;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+}
+
+#step-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+#step-section h3 {
+    flex-shrink: 0;
+}
+
+.step-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+}
+
+.step-btn {
+    width: 32px;
+    height: 32px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    color: var(--text);
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.step-btn:hover:not(:disabled) {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+}
+
+.step-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.step-counter {
+    flex: 1;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.step-list {
+    flex: 1;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg-tertiary);
+    padding: 8px;
+}
+
+.step-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    cursor: default;
+    transition: background 0.2s;
+}
+
+.step-item:hover {
+    background: var(--bg);
+}
+
+.step-item .step-icon {
+    width: 16px;
+    text-align: center;
+    font-size: 10px;
+}
+
+.step-item.executed .step-icon {
+    color: var(--success);
+}
+
+.step-item.current {
+    background: var(--accent);
+    color: #fff;
+    border-radius: 4px;
+}
+
+.step-item.current .step-icon {
+    color: #fff;
+}
+
+.step-item.pending {
+    color: var(--text-secondary);
+}
+
+.step-item .step-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
