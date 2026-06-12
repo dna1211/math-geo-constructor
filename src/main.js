@@ -666,6 +666,11 @@ function bindUI() {
     bus.on('step:executed', () => {
         updateStepPanel();
     });
+
+    // 监听清空事件，更新步骤面板
+    bus.on('store:cleared', () => {
+        updateStepPanel();
+    });
 }
 
 // 获取可拾取对象

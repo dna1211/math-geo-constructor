@@ -23,6 +23,11 @@ export class StepManager {
                 step.objectNames = step.objectNames.filter(n => n !== name);
             });
         });
+
+        // 监听清空事件，重置步骤管理器
+        this.bus.on('store:cleared', () => {
+            this.reset();
+        });
     }
 
     /**
