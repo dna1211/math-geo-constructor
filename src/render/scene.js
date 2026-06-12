@@ -4,12 +4,15 @@
  */
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { getThemeManager } from '../utils/themeManager.js';
 
 export class SceneManager {
-    constructor() {
+    constructor(bus) {
         this.canvas = document.getElementById('canvas');
         this.scene = new THREE.Scene();
         this.clock = new THREE.Clock();
+        this.bus = bus;
+        this.themeManager = getThemeManager(bus);
 
         this.initRenderer();
         this.initCamera();
@@ -271,13 +274,17 @@ export class SceneManager {
 
     /** 切换主题 */
     setTheme(theme) {
-        if (theme === 'light') {
-            this.renderer.setClearColor(0xd8d6d0);
-            this.grid.material.color.set(0xb0aea8);
-        } else {
-            this.renderer.setClearColor(0x0b0b12);
-            this.grid.material.color.set(0x1a1a28);
+        // 更新 ThemeManager
+        if (this.themeManager) {
+            this.themeManager.setTheme(theme);
         }
+
+        // 更新场景颜色
+        const bgColor = this.themeManager ? this.themeManager.getBackgroundColor() : (theme === 'light' ? 0xd8d6d0 : 0x0b0b12);
+        const gridColor = this.themeManager ? this.themeManager.getGridColor() : (theme === 'light' ? 0xb0aea8 : 0x1a1a28);
+
+        this.renderer.setClearColor(bgColor);
+        this.grid.material.color.set(gridColor);
     }
 
     /** 切换投影方式 */

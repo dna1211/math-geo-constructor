@@ -2,6 +2,8 @@
  * 几何对象类型定义
  */
 
+import { getThemeManager } from '../utils/themeManager.js';
+
 /**
  * 创建几何对象
  * @param {string} name - 对象名称
@@ -23,31 +25,37 @@ export function createGeomObject(name, type, data, parents = []) {
 }
 
 /**
- * 获取默认样式
+ * 获取默认样式（根据当前主题）
  * @param {string} type - 对象类型
  * @returns {Object} 默认样式
  */
 function getDefaultStyle(type) {
+    const themeManager = getThemeManager();
     const baseStyle = {
         visible: true,
         label: null  // null 表示使用对象名
     };
 
+    // 获取主题感知的颜色
+    const pointColor = themeManager ? themeManager.getPointColor() : '#e0dcd2';
+    const lineColor = themeManager ? themeManager.getLineColor() : '#e0dcd2';
+    const faceColor = themeManager ? themeManager.getFaceColor() : '#c9a04a';
+
     switch (type) {
         case 'point':
-            return { ...baseStyle, color: '#e0dcd2' };
+            return { ...baseStyle, color: pointColor };
         case 'segment':
-            return { ...baseStyle, color: '#e0dcd2', dash: false, lineWidth: 2 };
+            return { ...baseStyle, color: lineColor, dash: false, lineWidth: 2 };
         case 'line':
         case 'ray':
-            return { ...baseStyle, color: '#e0dcd2', dash: true, lineWidth: 2 };
+            return { ...baseStyle, color: lineColor, dash: true, lineWidth: 2 };
         case 'triangle':
         case 'polygon':
-            return { ...baseStyle, color: '#c9a04a', opacity: 0.3 };
+            return { ...baseStyle, color: faceColor, opacity: 0.3 };
         case 'plane':
-            return { ...baseStyle, color: '#c9a04a', opacity: 0.2 };
+            return { ...baseStyle, color: faceColor, opacity: 0.2 };
         default:
-            return { ...baseStyle, color: '#e0dcd2' };
+            return { ...baseStyle, color: pointColor };
     }
 }
 

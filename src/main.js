@@ -18,9 +18,13 @@ import { Dragger } from './interaction/dragger.js';
 import { ToolManager } from './interaction/toolManager.js';
 import { HistoryManager } from './geometry/history.js';
 import { StorageManager } from './storage.js';
+import { getThemeManager } from './utils/themeManager.js';
 
 // ===== 初始化 =====
-const sceneManager = new SceneManager();
+// 初始化主题管理器
+const themeManager = getThemeManager(bus);
+
+const sceneManager = new SceneManager(bus);
 const store = new ObjectStore(bus);
 const history = new HistoryManager(store, bus);
 const storage = new StorageManager(store, bus);
@@ -28,7 +32,7 @@ const executor = new Executor(store, bus, history);
 
 // 标签渲染器
 const viewport = document.getElementById('viewport');
-const labelRenderer = new LabelRenderer(sceneManager.scene, sceneManager.camera, viewport);
+const labelRenderer = new LabelRenderer(sceneManager.scene, sceneManager.camera, viewport, bus);
 
 // 几何渲染器
 const geomRenderer = new GeomRenderer(sceneManager.scene, store, bus, labelRenderer, sceneManager.renderer);
@@ -230,6 +234,8 @@ function bindUI() {
     // 读取保存的主题偏好
     const savedTheme = localStorage.getItem(THEME_KEY) || 'dark';
     applyTheme(savedTheme);
+    // 初始化主题管理器和场景
+    themeManager.setTheme(savedTheme);
     sceneManager.setTheme(savedTheme);
 
     btnTheme.addEventListener('click', () => {

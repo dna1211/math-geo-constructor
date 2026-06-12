@@ -4,12 +4,15 @@
  */
 
 import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { getThemeManager } from '../utils/themeManager.js';
 
 export class LabelRenderer {
-    constructor(scene, camera, container) {
+    constructor(scene, camera, container, bus) {
         this.scene = scene;
         this.camera = camera;
         this.container = container;
+        this.bus = bus;
+        this.themeManager = getThemeManager();
 
         // 创建 CSS2D 渲染器
         this.renderer = new CSS2DRenderer();
@@ -25,6 +28,11 @@ export class LabelRenderer {
 
         // 监听窗口大小变化
         window.addEventListener('resize', () => this.resize());
+
+        // 监听主题变化，更新所有标签颜色
+        if (this.bus) {
+            this.bus.on('theme:changed', () => this.updateAllLabelsForTheme());
+        }
     }
 
     /**
@@ -130,5 +138,25 @@ export class LabelRenderer {
      */
     resize() {
         this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+    }
+
+    /**
+     * 主题变化时更新所有标签的颜色
+     */
+    updateAllLabelsForTheme() {
+        if (!this.themeManager) return;
+
+        const defaultPointColor = this.themeManager.getPointColor();
+        const defaultLineColor = this.themeManager.getLineColor();
+        const defaultFaceColor = this.themeManager.getFaceColor();
+
+        // 遍历所有标签，更新颜色
+        for (const [name, label] of this.labels) {
+            if (label.element) {
+                // 根据对象类型选择默认颜色
+                // 简单策略：使用点的颜色作为标签默认颜色
+                label.element.style.color = defaultPointColor;
+            }
+        }
     }
 }

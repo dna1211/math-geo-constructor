@@ -7,6 +7,7 @@ import * as THREE from 'three';
 import { Line2 } from 'three/addons/lines/Line2.js';
 import { LineGeometry } from 'three/addons/lines/LineGeometry.js';
 import { LineMaterial } from 'three/addons/lines/LineMaterial.js';
+import { getThemeManager } from '../utils/themeManager.js';
 
 export class GeomRenderer {
     constructor(scene, store, bus, labelRenderer, renderer) {
@@ -15,12 +16,16 @@ export class GeomRenderer {
         this.bus = bus;
         this.labelRenderer = labelRenderer;
         this.renderer = renderer;
+        this.themeManager = getThemeManager();
 
         // 监听对象事件
         this.bus.on('object:created', ({ name, obj }) => this.renderCreate(obj));
         this.bus.on('object:updated', ({ name, obj }) => this.renderUpdate(obj));
         this.bus.on('object:deleted', ({ name, obj }) => this.renderRemove(obj));
         this.bus.on('store:cleared', () => this.clearAll());
+
+        // 监听主题变化，更新所有对象颜色
+        this.bus.on('theme:changed', ({ theme }) => this.updateAllColorsForTheme());
     }
 
     /**
@@ -144,8 +149,9 @@ export class GeomRenderer {
 
         // 点（球体）
         const geometry = new THREE.SphereGeometry(0.06, 16, 16);
+        const defaultColor = this.themeManager ? this.themeManager.getPointColor() : '#e0dcd2';
         const material = new THREE.MeshStandardMaterial({
-            color: obj.style.color || '#e0dcd2'
+            color: obj.style.color || defaultColor
         });
         const mesh = new THREE.Mesh(geometry, material);
         // 不交换，直接使用数学坐标
@@ -156,7 +162,7 @@ export class GeomRenderer {
         // 使用 LabelRenderer 创建标签
         if (this.labelRenderer) {
             const labelPos = new THREE.Vector3(x, y + 0.15, z);  // 在点的上方
-            this.labelRenderer.createLabel(obj.name, obj, labelPos, obj.style.color || '#e0dcd2');
+            this.labelRenderer.createLabel(obj.name, obj, labelPos, obj.style.color || defaultColor);
         }
 
         return mesh;
@@ -168,8 +174,9 @@ export class GeomRenderer {
     createLineMaterial(obj) {
         const size = new THREE.Vector2();
         this.renderer.getSize(size);
+        const defaultColor = this.themeManager ? this.themeManager.getLineColor() : '#e0dcd2';
         const material = new LineMaterial({
-            color: new THREE.Color(obj.style.color || '#e0dcd2').getHex(),
+            color: new THREE.Color(obj.style.color || defaultColor).getHex(),
             linewidth: obj.style.lineWidth || 2,
             resolution: size,
             dashed: obj.style.dash === true,
@@ -285,8 +292,9 @@ export class GeomRenderer {
         }
 
         const geometry = new THREE.PlaneGeometry(10, 10);
+        const defaultColor = this.themeManager ? this.themeManager.getFaceColor() : '#c9a04a';
         const material = new THREE.MeshStandardMaterial({
-            color: obj.style.color || '#c9a04a',
+            color: obj.style.color || defaultColor,
             opacity: obj.style.opacity || 0.2,
             transparent: true,
             side: THREE.DoubleSide
@@ -320,8 +328,9 @@ export class GeomRenderer {
         geometry.setAttribute('position', new THREE.BufferAttribute(vertices, 3));
         geometry.computeVertexNormals();
 
+        const defaultColor = this.themeManager ? this.themeManager.getFaceColor() : '#c9a04a';
         const material = new THREE.MeshStandardMaterial({
-            color: obj.style.color || '#c9a04a',
+            color: obj.style.color || defaultColor,
             opacity: obj.style.opacity || 0.3,
             transparent: true,
             side: THREE.DoubleSide
@@ -332,7 +341,7 @@ export class GeomRenderer {
         group.add(new THREE.Mesh(geometry, material));
 
         const edgeGeo = new THREE.EdgesGeometry(geometry);
-        const edgeMat = new THREE.LineBasicMaterial({ color: obj.style.color || '#c9a04a' });
+        const edgeMat = new THREE.LineBasicMaterial({ color: obj.style.color || defaultColor });
         group.add(new THREE.LineSegments(edgeGeo, edgeMat));
 
         return group;
@@ -388,8 +397,9 @@ export class GeomRenderer {
         geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
         geometry.computeVertexNormals();
 
+        const defaultColor = this.themeManager ? this.themeManager.getFaceColor() : '#c9a04a';
         const material = new THREE.MeshStandardMaterial({
-            color: obj.style.color || '#c9a04a',
+            color: obj.style.color || defaultColor,
             opacity: obj.style.opacity || 0.3,
             transparent: true,
             side: THREE.DoubleSide
@@ -400,10 +410,107 @@ export class GeomRenderer {
         group.add(new THREE.Mesh(geometry, material));
 
         const edgeGeo = new THREE.EdgesGeometry(geometry);
-        const edgeMat = new THREE.LineBasicMaterial({ color: obj.style.color || '#c9a04a' });
+        const edgeMat = new THREE.LineBasicMaterial({ color: obj.style.color || defaultColor });
         group.add(new THREE.LineSegments(edgeGeo, edgeMat));
 
         return group;
+    }
+
+    /**
+     * 主题变化时更新所有对象的颜色
+     * 只更新使用默认颜色的对象（用户自定义颜色的对象保持不变）
+     */
+    updateAllColorsForTheme() {
+        if (!this.themeManager) return;
+
+        const defaultPointColor = this.themeManager.getPointColor();
+        const defaultLineColor = this.themeManager.getLineColor();
+        const defaultFaceColor = this.themeManager.getFaceColor();
+
+        // 遍历所有存储的对象
+        this.store.getAll().forEach(obj => {
+            if (!obj.renderRef) return;
+
+            // 检查对象是否使用默认颜色（非用户自定义）
+            const isDefaultColor = this.isUsingDefaultColor(obj);
+            if (!isDefaultColor) return;
+
+            // 根据对象类型更新颜色
+            const newColor = this.getDefaultColorForType(obj.type);
+            if (!newColor) return;
+
+            // 更新对象样式的默认颜色
+            obj.style.color = newColor;
+
+            // 更新渲染对象的颜色
+            this.updateObjectColor(obj, newColor);
+        });
+    }
+
+    /**
+     * 判断对象是否使用默认颜色
+     */
+    isUsingDefaultColor(obj) {
+        // 如果对象没有设置颜色，使用默认
+        if (!obj.style.color) return true;
+
+        // 检查是否匹配任一主题的默认颜色
+        const darkColors = ['#e0dcd2', '#c9a04a'];
+        const lightColors = ['#1a1a28', '#b08030'];
+        return darkColors.includes(obj.style.color) || lightColors.includes(obj.style.color);
+    }
+
+    /**
+     * 获取对象类型的默认颜色
+     */
+    getDefaultColorForType(type) {
+        if (!this.themeManager) return null;
+
+        switch (type) {
+            case 'point':
+                return this.themeManager.getPointColor();
+            case 'segment':
+            case 'line':
+            case 'ray':
+                return this.themeManager.getLineColor();
+            case 'triangle':
+            case 'polygon':
+            case 'plane':
+                return this.themeManager.getFaceColor();
+            default:
+                return this.themeManager.getPointColor();
+        }
+    }
+
+    /**
+     * 更新单个对象的渲染颜色
+     */
+    updateObjectColor(obj, newColor) {
+        const mesh = obj.renderRef;
+        if (!mesh) return;
+
+        // Group 对象（如三角形、多边形的面+边线）
+        if (mesh.isGroup) {
+            mesh.children.forEach(child => {
+                if (child.material) {
+                    if (Array.isArray(child.material)) {
+                        child.material.forEach(m => {
+                            if (m.color) m.color.set(newColor);
+                        });
+                    } else if (child.material.color) {
+                        child.material.color.set(newColor);
+                    }
+                }
+            });
+        } else if (mesh.material) {
+            // 单个材质对象
+            if (mesh.material.isLineMaterial) {
+                // LineMaterial 需要使用 set 方法
+                mesh.material.color.set(new THREE.Color(newColor).getHex());
+            } else if (mesh.material.color) {
+                mesh.material.color.set(newColor);
+            }
+        }
     }
 
     /**
