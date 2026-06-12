@@ -370,4 +370,44 @@ export class StepManager {
         this.currentStepIndex = -1;
         this.isStepMode = false;
     }
+
+    /**
+     * 序列化步骤数据
+     * @returns {Object} 序列化数据
+     */
+    serialize() {
+        return {
+            steps: this.steps.map(step => ({
+                name: step.name,
+                commands: [...step.commands],
+                objectNames: [...step.objectNames],
+                stepId: step.stepId
+            })),
+            currentStepIndex: this.currentStepIndex,
+            isStepMode: this.isStepMode
+        };
+    }
+
+    /**
+     * 反序列化并恢复步骤
+     * @param {Object} data - 序列化数据
+     */
+    deserialize(data) {
+        if (!data || !data.steps) {
+            this.reset();
+            return;
+        }
+
+        this.steps = data.steps.map(step => ({
+            name: step.name,
+            commands: [...step.commands],
+            objectNames: [...step.objectNames],
+            stepId: step.stepId
+        }));
+        this.currentStepIndex = data.currentStepIndex ?? -1;
+        this.isStepMode = data.isStepMode ?? false;
+
+        // 发出步骤解析完成事件
+        this.bus.emit('steps:parsed', { steps: this.steps });
+    }
 }

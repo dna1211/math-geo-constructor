@@ -32,7 +32,7 @@ const themeManager = getThemeManager(bus);
 const sceneManager = new SceneManager(bus);
 const store = new ObjectStore(bus);
 const history = new HistoryManager(store, bus);
-const storage = new StorageManager(store, bus);
+const storage = new StorageManager(store, bus, stepManager);
 const executor = new Executor(store, bus, history);
 const stepManager = new StepManager(store, bus, executor);
 

@@ -7,9 +7,10 @@ const STORAGE_KEY = 'geometry-tool-autosave';
 const SAVE_INTERVAL = 2000;  // 2 秒节流
 
 export class StorageManager {
-    constructor(store, bus) {
+    constructor(store, bus, stepManager) {
         this.store = store;
         this.bus = bus;
+        this.stepManager = stepManager;
         this.timer = null;
 
         // 监听对象变更事件
@@ -17,6 +18,8 @@ export class StorageManager {
         this.bus.on('object:updated', () => this.scheduleSave());
         this.bus.on('object:deleted', () => this.scheduleSave());
         this.bus.on('store:cleared', () => this.scheduleSave());
+        this.bus.on('steps:parsed', () => this.scheduleSave());
+        this.bus.on('step:changed', () => this.scheduleSave());
     }
 
     /**
@@ -28,16 +31,24 @@ export class StorageManager {
     }
 
     /**
+     * 构建保存数据
+     * @returns {Object} 保存数据
+     */
+    buildSaveData() {
+        return {
+            name: this.store.projectName || '未命名项目',
+            updated: new Date().toISOString(),
+            objects: this.store.serialize(),
+            steps: this.stepManager ? this.stepManager.serialize() : null
+        };
+    }
+
+    /**
      * 保存到 localStorage
      */
     saveToLocalStorage() {
-        const data = {
-            name: this.store.projectName || '未命名项目',
-            updated: new Date().toISOString(),
-            objects: this.store.serialize()
-        };
-
         try {
+            const data = this.buildSaveData();
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
         } catch (e) {
             console.warn('保存到 localStorage 失败:', e);
@@ -54,6 +65,12 @@ export class StorageManager {
                 const data = JSON.parse(saved);
                 this.store.deserialize(data.objects);
                 this.store.projectName = data.name;
+
+                // 恢复步骤
+                if (data.steps && this.stepManager) {
+                    this.stepManager.deserialize(data.steps);
+                }
+
                 return data;
             } catch (e) {
                 console.warn('从 localStorage 加载失败:', e);
@@ -74,12 +91,8 @@ export class StorageManager {
      * 保存为 JSON 文件下载
      */
     saveToFile() {
-        const data = {
-            name: this.store.projectName || '未命名项目',
-            created: this.store.createdTime || new Date().toISOString(),
-            updated: new Date().toISOString(),
-            objects: this.store.serialize()
-        };
+        const data = this.buildSaveData();
+        data.created = this.store.createdTime || new Date().toISOString();
 
         const json = JSON.stringify(data, null, 2);
         const blob = new Blob([json], { type: 'application/json' });
@@ -109,6 +122,12 @@ export class StorageManager {
                     }
                     this.store.deserialize(data.objects);
                     this.store.projectName = data.name || '未命名项目';
+
+                    // 恢复步骤
+                    if (data.steps && this.stepManager) {
+                        this.stepManager.deserialize(data.steps);
+                    }
+
                     resolve(data);
                 } catch (err) {
                     reject(new Error('文件解析失败'));
