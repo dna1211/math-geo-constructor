@@ -272,6 +272,13 @@ export class StepManager {
 
         if (!object.material) return;
 
+        // 保存原始透明度（仅在首次调用时保存）
+        if (!object.material.userData) object.material.userData = {};
+        if (object.material.userData.originalOpacity === undefined) {
+            object.material.userData.originalOpacity = object.material.opacity;
+            object.material.userData.originalTransparent = object.material.transparent;
+        }
+
         // 设置透明属性
         object.material.transparent = true;
         object.material.opacity = 0;
@@ -283,17 +290,17 @@ export class StepManager {
             const elapsed = Date.now() - startTime;
             const progress = Math.min(elapsed / duration, 1);
 
-            object.material.opacity = progress;
+            object.material.opacity = progress * object.material.userData.originalOpacity;
 
             if (progress < 1) {
                 requestAnimationFrame(animate);
             } else {
-                // 动画完成，恢复非透明（如果不原本就是透明的）
-                const originalOpacity = object.material.userData?.originalOpacity;
-                if (originalOpacity === undefined || originalOpacity >= 1) {
-                    object.material.transparent = false;
-                    object.material.opacity = 1;
-                }
+                // 动画完成，恢复原始透明状态
+                object.material.opacity = object.material.userData.originalOpacity;
+                object.material.transparent = object.material.userData.originalTransparent;
+                // 清除保存的数据
+                delete object.material.userData.originalOpacity;
+                delete object.material.userData.originalTransparent;
             }
         };
 
