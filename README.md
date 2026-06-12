@@ -12,11 +12,28 @@
 
 ```
 ├── src/                       # 源码
-│   ├── main.js                # 入口，组装各模块，绑定 UI 事件
+│   ├── main.js                # 入口，初始化模块，组装 UI
 │   ├── storage.js             # LocalStorage 自动保存 + 文件导入导出
-│   ├── style.css              # 应用样式
+│   ├── ui/                    # UI 模块
+│   │   ├── stepPanel.js       #   步骤面板
+│   │   ├── propPanel.js       #   属性面板
+│   │   ├── toolbar.js         #   工具栏
+│   │   ├── commandPanel.js    #   命令面板
+│   │   ├── shortcuts.js       #   快捷键
+│   │   └── utils.js           #   UI 工具函数
+│   ├── styles/                # 样式文件
+│   │   ├── variables.css      #   主题变量
+│   │   ├── base.css           #   重置 + 基础
+│   │   ├── layout.css         #   整体布局
+│   │   ├── toolbar.css        #   工具栏
+│   │   ├── properties.css     #   属性面板
+│   │   ├── command.css        #   命令面板
+│   │   ├── step.css           #   步骤面板
+│   │   └── modal.css          #   弹窗
 │   ├── utils/
-│   │   └── eventBus.js        # 事件总线
+│   │   ├── eventBus.js        #   事件总线（带事件常量）
+│   │   ├── stepManager.js     #   步骤管理器
+│   │   └── themeManager.js    #   主题管理器
 │   ├── parser/                # 命令解析器
 │   │   ├── tokenizer.js       #   词法分析
 │   │   ├── parser.js          #   语法解析（递归下降）
@@ -56,6 +73,7 @@ npm run dev
 ```bash
 npm run build
 ```
+
 ## git 仓库
 
 ```bash
@@ -72,8 +90,9 @@ git clone https://github.com/yourusername/math-geo-constructor.git
 | 构造 | Point, Segment, Line, Ray, Triangle, Polygon, Plane | `A = Point(0, 0, 0)` |
 | 计算 | Midpoint, Fold, Reflect, Distance | `M = Midpoint(A, B)` |
 | 高级 | RegularPolygon, EquilateralTriangle | `RP = RegularPolygon(S, 6, P, 30)` |
-| 样式 | Color, Dash, Opacity, Hide, Show, Label | `Color(A, "#ff0000")` |
+| 样式 | Color, Dash, LineWidth, Opacity, Hide, Show, Label | `Color(A, "#ff0000")` |
 | 操作 | Delete, Undo, Redo, Clear, Grid, Axis | `Undo` |
+| 步骤 | `---step 名称---` | `---step 底面---` |
 
 ## 保存方式
 
@@ -81,3 +100,23 @@ git clone https://github.com/yourusername/math-geo-constructor.git
 - **手动导出**：JSON 文件下载（Ctrl+S）
 - **导入**：JSON 文件加载（Ctrl+O）
 - **导出图片**：PNG 截图（Ctrl+P）
+
+## 快捷键
+
+| 快捷键 | 功能 |
+|--------|------|
+| `V` | 选择工具 |
+| `P` | 画点工具 |
+| `L` | 画线工具 |
+| `T` | 画面工具 |
+| `H` | 拖拽工具 |
+| `Space` | 切换投影方式 |
+| `F1` | 帮助 |
+| `Ctrl+Z` | 撤销 |
+| `Ctrl+Y` | 重做 |
+| `Ctrl+S` | 保存文件 |
+| `Ctrl+O` | 加载文件 |
+| `Ctrl+P` | 导出 PNG |
+| `Delete` | 删除选中对象 |
+| `Tab` | 自动补全 |
+| `↑/↓` | 翻阅命令历史 |

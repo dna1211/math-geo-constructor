@@ -1,0 +1,35 @@
+/* ===== CSS 变量（暗色主题） ===== */
+:root {
+    --bg: #0b0b12;
+    --bg-secondary: #12121a;
+    --bg-tertiary: #1a1a28;
+    --border: #2a2a3a;
+    --text: #e0dcd2;
+    --text-secondary: #888;
+    --point: #e0dcd2;
+    --line: #e0dcd2;
+    --face: #c9a04a;
+    --accent: #4aa0c9;
+    --fold: #9966cc;
+    --selected: #55ccee;
+    --error: #ff4444;
+    --success: #44ff44;
+}
+
+/* ===== 浅色主题 ===== */
+:root[data-theme="light"] {
+    --bg: #e8e6e0;
+    --bg-secondary: #f5f3ee;
+    --bg-tertiary: #ffffff;
+    --border: #d0cec8;
+    --text: #1a1a28;
+    --text-secondary: #666;
+    --point: #1a1a28;
+    --line: #1a1a28;
+    --face: #b08030;
+    --accent: #2a80a9;
+    --fold: #7744aa;
+    --selected: #0088aa;
+    --error: #cc2222;
+    --success: #22aa22;
+}

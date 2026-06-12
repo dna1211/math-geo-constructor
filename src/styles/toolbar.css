@@ -1,0 +1,49 @@
+/* ===== 工具栏 ===== */
+#toolbar {
+    width: 48px;
+    background: var(--bg-secondary);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 8px 0;
+    gap: 4px;
+    position: relative;
+    z-index: 10;
+}
+
+.tool-btn {
+    width: 40px;
+    height: 40px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+}
+
+.tool-btn:hover {
+    background: var(--bg-tertiary);
+    color: var(--text);
+}
+
+.tool-btn.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+}
+
+.tool-btn .icon {
+    font-size: 16px;
+    line-height: 1;
+}
+
+.tool-btn .label {
+    font-size: 10px;
+    margin-top: 2px;
+}
