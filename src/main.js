@@ -170,6 +170,16 @@ function updateStepPanel() {
                 <span class="step-name">${escapeHtml(step.name)}</span>
             `;
 
+            // 添加点击事件：跳转到该步骤
+            div.addEventListener('click', () => {
+                if (stepManager.steps.length === 0) return;
+                stepManager.goToStep(index);
+                updateStepPanel();
+            });
+
+            // 添加鼠标样式
+            div.style.cursor = 'pointer';
+
             stepList.appendChild(div);
         });
     }

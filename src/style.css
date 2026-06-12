@@ -549,12 +549,17 @@ body {
     padding: 6px 8px;
     border-radius: 4px;
     font-size: 12px;
-    cursor: default;
+    cursor: pointer;
     transition: background 0.2s;
 }
 
 .step-item:hover {
     background: var(--bg);
+    opacity: 0.9;
+}
+
+.step-item:active {
+    opacity: 0.7;
 }
 
 .step-item .step-icon {
