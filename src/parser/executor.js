@@ -39,6 +39,9 @@ export class Executor {
         this.registerCommand('Reflect', { minArgs: 2, maxArgs: 2, handler: this.cmdReflect.bind(this) });
         this.registerCommand('Distance', { minArgs: 2, maxArgs: 2, handler: this.cmdDistance.bind(this) });
         this.registerCommand('Foot', { minArgs: 2, maxArgs: 2, handler: this.cmdFoot.bind(this) });
+        this.registerCommand('Parallel', { minArgs: 2, maxArgs: 2, handler: this.cmdParallel.bind(this) });
+        this.registerCommand('Perpendicular', { minArgs: 2, maxArgs: 2, handler: this.cmdPerpendicular.bind(this) });
+        this.registerCommand('Intersect', { minArgs: 2, maxArgs: 2, handler: this.cmdIntersect.bind(this) });
 
         // 构造类（高级）
         this.registerCommand('RegularPolygon', { minArgs: 4, maxArgs: 4, handler: this.cmdRegularPolygon.bind(this) });
@@ -694,6 +697,176 @@ export class Executor {
                 const t = store.get(l.data.to);
                 if (!f || !t) return null;
                 return calc.footOfPerpendicular(p.data, f.data, t.data);
+            }
+        };
+    }
+
+    /** Parallel(A, Segment(B,C)) 或 Parallel(A, Line(B,C)) — 过点作平行线 */
+    cmdParallel(args) {
+        const [point, line] = args;
+        if (!point?.data) throw new Error('Parallel 第一个参数需要是点');
+        if (!line?.data) throw new Error('Parallel 第二个参数需要是线段或直线');
+
+        const pointName = point.name;
+        const lineName = line.name;
+
+        // 获取线段/直线端点
+        const from = this.store.get(line.data.from);
+        const to = this.store.get(line.data.to);
+        if (!from || !to) throw new Error('线段端点不存在');
+
+        // 计算平行线上的第二点
+        const secondPoint = calc.parallelThroughPoint(point.data, from.data, to.data);
+
+        // 注册第二点（内部辅助点，自动命名，初始即隐藏）
+        this._autoCounter++;
+        const secondName = `__parallel_${this._autoCounter}`;
+        this.store.register(secondName, {
+            type: 'point',
+            data: secondPoint,
+            parents: [pointName, lineName],
+            style: { visible: false },
+            compute: (store) => {
+                const p = store.get(pointName);
+                const l = store.get(lineName);
+                if (!p || !l) return null;
+                const f = store.get(l.data.from);
+                const t = store.get(l.data.to);
+                if (!f || !t) return null;
+                return calc.parallelThroughPoint(p.data, f.data, t.data);
+            }
+        });
+
+        // 返回 line 对象
+        const second = this.store.get(secondName);
+        return {
+            type: 'line',
+            data: { from: pointName, to: secondName },
+            parents: [pointName, secondName]
+        };
+    }
+
+    /** Perpendicular(A, Segment(B,C)) 或 Perpendicular(A, Line(B,C)) — 过点作垂线 */
+    cmdPerpendicular(args) {
+        const [point, line] = args;
+        if (!point?.data) throw new Error('Perpendicular 第一个参数需要是点');
+        if (!line?.data) throw new Error('Perpendicular 第二个参数需要是线段或直线');
+
+        const pointName = point.name;
+        const lineName = line.name;
+
+        // 获取线段/直线端点
+        const from = this.store.get(line.data.from);
+        const to = this.store.get(line.data.to);
+        if (!from || !to) throw new Error('线段端点不存在');
+
+        // 计算垂线上的第二点（即垂足）
+        const footPoint = calc.perpendicularThroughPoint(point.data, from.data, to.data);
+
+        // 注册垂足点（内部辅助点，自动命名，初始即隐藏）
+        this._autoCounter++;
+        const footName = `__perp_${this._autoCounter}`;
+        this.store.register(footName, {
+            type: 'point',
+            data: footPoint,
+            parents: [pointName, lineName],
+            style: { visible: false },
+            compute: (store) => {
+                const p = store.get(pointName);
+                const l = store.get(lineName);
+                if (!p || !l) return null;
+                const f = store.get(l.data.from);
+                const t = store.get(l.data.to);
+                if (!f || !t) return null;
+                return calc.perpendicularThroughPoint(p.data, f.data, t.data);
+            }
+        });
+
+        // 返回 line 对象
+        return {
+            type: 'line',
+            data: { from: pointName, to: footName },
+            parents: [pointName, footName]
+        };
+    }
+
+    /** Intersect(L1, L2) 或 Intersect(L, Segment) 或 Intersect(Segment, Segment) — 求交点 */
+    cmdIntersect(args) {
+        const [obj1, obj2] = args;
+        if (!obj1?.data) throw new Error('Intersect 第一个参数需要是线段或直线');
+        if (!obj2?.data) throw new Error('Intersect 第二个参数需要是线段或直线');
+
+        const name1 = obj1.name;
+        const name2 = obj2.name;
+
+        // 判断是否为线段（需要钳制参数）
+        const isSegment1 = obj1.type === 'segment';
+        const isSegment2 = obj2.type === 'segment';
+
+        // 获取端点
+        const getEndpoints = (obj) => {
+            if (obj.type === 'segment' || obj.type === 'line') {
+                const from = this.store.get(obj.data.from);
+                const to = this.store.get(obj.data.to);
+                if (!from || !to) throw new Error('线段端点不存在');
+                return { from: from.data, to: to.data };
+            }
+            if (obj.type === 'ray') {
+                const origin = this.store.get(obj.data.origin);
+                const through = this.store.get(obj.data.through);
+                if (!origin || !through) throw new Error('射线端点不存在');
+                return { from: origin.data, to: through.data };
+            }
+            throw new Error('Intersect 需要线段、直线或射线');
+        };
+
+        const ep1 = getEndpoints(obj1);
+        const ep2 = getEndpoints(obj2);
+
+        const result = calc.lineIntersection(
+            ep1.from, ep1.to,
+            ep2.from, ep2.to,
+            isSegment1, isSegment2
+        );
+
+        if (!result) {
+            throw new Error('两线平行，无交点');
+        }
+
+        return {
+            type: 'point',
+            data: result,
+            parents: [name1, name2],
+            compute: (store) => {
+                const o1 = store.get(name1);
+                const o2 = store.get(name2);
+                if (!o1 || !o2) return null;
+
+                const getEp = (obj) => {
+                    if (obj.type === 'segment' || obj.type === 'line') {
+                        const f = store.get(obj.data.from);
+                        const t = store.get(obj.data.to);
+                        if (!f || !t) return null;
+                        return { from: f.data, to: t.data };
+                    }
+                    if (obj.type === 'ray') {
+                        const o = store.get(obj.data.origin);
+                        const th = store.get(obj.data.through);
+                        if (!o || !th) return null;
+                        return { from: o.data, to: th.data };
+                    }
+                    return null;
+                };
+
+                const e1 = getEp(o1);
+                const e2 = getEp(o2);
+                if (!e1 || !e2) return null;
+
+                return calc.lineIntersection(
+                    e1.from, e1.to,
+                    e2.from, e2.to,
+                    o1.type === 'segment', o2.type === 'segment'
+                );
             }
         };
     }

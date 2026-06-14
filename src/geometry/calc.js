@@ -243,3 +243,75 @@ export function footOfPerpendicular(point, lineFrom, lineTo) {
     const t = dot(ap, ab) / dot(ab, ab);
     return add(lineFrom, scale(ab, t));
 }
+
+/**
+ * 计算过指定点且平行于给定线段/直线的第二点
+ * @param {Object} point - 过点 {x, y, z}
+ * @param {Object} lineFrom - 线段/直线起点 {x, y, z}
+ * @param {Object} lineTo - 线段/直线终点 {x, y, z}
+ * @returns {Object} 平行线上的第二点 {x, y, z}
+ */
+export function parallelThroughPoint(point, lineFrom, lineTo) {
+    const dir = subtract(lineTo, lineFrom);
+    return add(point, dir);
+}
+
+/**
+ * 计算过指定点且垂直于给定线段/直线的第二点（即垂足）
+ * 垂线上的第二点就是垂足本身
+ * @param {Object} point - 过点 {x, y, z}
+ * @param {Object} lineFrom - 线段/直线起点 {x, y, z}
+ * @param {Object} lineTo - 线段/直线终点 {x, y, z}
+ * @returns {Object} 垂线上的第二点（垂足） {x, y, z}
+ */
+export function perpendicularThroughPoint(point, lineFrom, lineTo) {
+    return footOfPerpendicular(point, lineFrom, lineTo);
+}
+
+/**
+ * 求两直线/线段的交点（3D 空间）
+ * 对于异面直线，取两线最短距离的中点
+ * @param {Object} p1 - 第一条线起点 {x, y, z}
+ * @param {Object} q1 - 第一条线终点 {x, y, z}
+ * @param {Object} p2 - 第二条线起点 {x, y, z}
+ * @param {Object} q2 - 第二条线终点 {x, y, z}
+ * @param {boolean} clampToSegment1 - 是否将交点限制在第一条线段内
+ * @param {boolean} clampToSegment2 - 是否将交点限制在第二条线段内
+ * @returns {Object|null} 交点 {x, y, z}，平行时返回 null
+ */
+export function lineIntersection(p1, q1, p2, q2, clampToSegment1 = false, clampToSegment2 = false) {
+    const d1 = subtract(q1, p1);
+    const d2 = subtract(q2, p2);
+    const r = subtract(p1, p2);
+
+    const a = dot(d1, d1);
+    const b = dot(d1, d2);
+    const c = dot(d2, d2);
+    const d = dot(d1, r);
+    const e = dot(d2, r);
+    const denom = a * c - b * b;
+
+    // 平行检测
+    if (Math.abs(denom) < 1e-10) {
+        return null;
+    }
+
+    // 求参数 t (在第一条线上) 和 s (在第二条线上)
+    let t = (b * e - c * d) / denom;
+    let s = (a * e - b * d) / denom;
+
+    // 钳制到线段范围
+    if (clampToSegment1) {
+        t = Math.max(0, Math.min(1, t));
+    }
+    if (clampToSegment2) {
+        s = Math.max(0, Math.min(1, s));
+    }
+
+    // 两个最近点
+    const pointOnLine1 = add(p1, scale(d1, t));
+    const pointOnLine2 = add(p2, scale(d2, s));
+
+    // 对于共面相交线，两点应重合；对于异面线，取中点
+    return midpoint(pointOnLine1, pointOnLine2);
+}

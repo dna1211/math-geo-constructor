@@ -63,6 +63,7 @@ export class GeomRenderer {
 
         if (mesh) {
             mesh.userData.objectName = obj.name;
+            mesh.userData.objectType = obj.type;
             mesh.visible = obj.style.visible !== false;
             obj.renderRef = mesh;
             this.scene.add(mesh);
@@ -159,8 +160,8 @@ export class GeomRenderer {
         mesh.userData.objectName = obj.name;
         mesh.userData.objectType = 'point';
 
-        // 使用 LabelRenderer 创建标签
-        if (this.labelRenderer) {
+        // 使用 LabelRenderer 创建标签（跳过隐藏对象）
+        if (this.labelRenderer && obj.style.visible !== false) {
             const labelPos = new THREE.Vector3(x, y + 0.15, z);  // 在点的上方
             this.labelRenderer.createLabel(obj.name, obj, labelPos, obj.style.color || defaultColor);
         }

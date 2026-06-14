@@ -85,14 +85,78 @@ git clone https://github.com/yourusername/math-geo-constructor.git
 
 ## 支持的命令
 
-| 类别 | 命令 | 示例 |
+### 命令分层
+
+命令分为**底层原语**（可自由组合）和**上层快捷方式**（常见模式封装）：
+
+**构造线 → 求交点** 是基本模式：
+```
+L = Parallel(A, Segment(B,C))          # 底层：过A作BC平行线（返回线）
+L = Perpendicular(A, Segment(B,C))     # 底层：过A作BC垂线（返回线）
+D = Intersect(L1, L2)                  # 底层：求两线交点（返回点）
+D = Foot(A, Segment(B,C))             # 快捷：= Intersect(Perpendicular(...), Segment(B,C))
+```
+
+### 构造类
+
+| 命令 | 说明 | 示例 |
 |------|------|------|
-| 构造 | Point, Segment, Line, Ray, Triangle, Polygon, Plane | `A = Point(0, 0, 0)` |
-| 计算 | Midpoint, Fold, Reflect, Distance | `M = Midpoint(A, B)` |
-| 高级 | RegularPolygon, EquilateralTriangle | `RP = RegularPolygon(S, 6, P, 30)` |
-| 样式 | Color, Dash, LineWidth, Opacity, Hide, Show, Label | `Color(A, "#ff0000")` |
-| 操作 | Delete, Undo, Redo, Clear, Grid, Axis | `Undo` |
-| 步骤 | `---step 名称---` | `---step 底面---` |
+| `Point` / `(x,y,z)` | 创建点 | `A = Point(0, 0, 0)` 或 `A = (1, 2, 3)` |
+| `Segment` | 线段（两点之间） | `segAB = Segment(A, B)` |
+| `Line` | 无限直线 | `line1 = Line(A, B)` |
+| `Ray` | 射线（从 A 过 B 延伸） | `ray1 = Ray(A, B)` |
+| `Triangle` | 三角形面 | `triABC = Triangle(A, B, C)` |
+| `Polygon` | 多边形面（≥3 点） | `poly1 = Polygon(A, B, C, D)` |
+| `Plane` | 平面 | `Plane(A, B, C)` 或 `Plane(0, 0, 1, 0)` |
+
+### 计算与变换类
+
+| 命令 | 说明 | 示例 |
+|------|------|------|
+| `Midpoint` | 中点 | `M = Midpoint(A, B)` |
+| `Fold` | 绕轴旋转（角度制） | `P' = Fold(P, Line(A,B), 90)` |
+| `Reflect` | 对称/镜像 | `R = Reflect(P, Line(A,B))` 或 `Reflect(P, Plane(...))` |
+| `Distance` | 两点距离 | `D = Distance(A, B)` |
+| `Foot` | 点到线的垂足 | `F = Foot(P, Segment(A,B))` 或 `Foot(P, Line(A,B))` |
+| `Parallel` | 过点作平行线 | `L = Parallel(A, Segment(B,C))` 或 `Parallel(A, Line(B,C))` |
+| `Perpendicular` | 过点作垂线 | `L = Perpendicular(A, Segment(B,C))` 或 `Perpendicular(A, Line(B,C))` |
+| `Intersect` | 两线交点 | `D = Intersect(L1, L2)` 或 `Intersect(L, Segment(A,B))` |
+
+### 高级构造类
+
+| 命令 | 说明 | 示例 |
+|------|------|------|
+| `RegularPolygon` | 正 n 边形 | `RP = RegularPolygon(Segment(A,B), 6, Plane(...), 0)` |
+| `EquilateralTriangle` | 正三角形 | `ET = EquilateralTriangle(Segment(A,B), Plane(...), 0)` |
+
+### 样式类
+
+| 命令 | 说明 | 示例 |
+|------|------|------|
+| `Color` | 设置颜色 | `Color(A, "#ff0000")` |
+| `Dash` | 虚线 | `Dash(segAB, true)` |
+| `LineWidth` | 线宽 | `LineWidth(segAB, 3)` |
+| `Opacity` | 透明度（0-1） | `Opacity(triABC, 0.5)` |
+| `Hide` | 隐藏 | `Hide(A)` |
+| `Show` | 显示 | `Show(A)` |
+| `Label` | 自定义标签 | `Label(A, "顶点A")` |
+
+### 操作类
+
+| 命令 | 说明 | 示例 |
+|------|------|------|
+| `Delete` | 删除对象 | `Delete(A)` |
+| `Undo` | 撤销 | `Undo` |
+| `Redo` | 重做 | `Redo` |
+| `Clear` | 清空全部 | `Clear` |
+| `Grid` | 网格开关 | `Grid(true)` |
+| `Axis` | 坐标轴开关 | `Axis(false)` |
+
+### 步骤控制
+
+| 语法 | 说明 | 示例 |
+|------|------|------|
+| `---step 名称---` | 标记新步骤的开始 | `---step 底面---` |
 
 ## 保存方式
 

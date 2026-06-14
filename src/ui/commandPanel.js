@@ -224,7 +224,7 @@ export class CommandPanel {
 
         // 命令列表
         const commands = ['Point', 'Segment', 'Line', 'Ray', 'Triangle', 'Polygon', 'Plane',
-                          'Midpoint', 'Fold', 'Reflect', 'Distance',
+                          'Midpoint', 'Fold', 'Reflect', 'Distance', 'Foot',
                           'Color', 'LineWidth', 'Dash', 'Opacity', 'Hide', 'Show', 'Label',
                           'Delete', 'Undo', 'Redo', 'Clear', 'Grid', 'Axis'];
 
