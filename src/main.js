@@ -42,7 +42,7 @@ const labelRenderer = new LabelRenderer(sceneManager.scene, sceneManager.camera,
 const geomRenderer = new GeomRenderer(sceneManager.scene, store, bus, labelRenderer, sceneManager.renderer);
 
 // 交互系统
-const picker = new Picker(sceneManager.camera, sceneManager.scene, store);
+const picker = new Picker(sceneManager.camera, sceneManager.scene);
 const selector = new Selector(store, bus);
 const dragger = new Dragger(store, picker, bus);
 const toolManager = new ToolManager(bus);
