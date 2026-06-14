@@ -229,3 +229,17 @@ export function scale(v, s) {
         z: v.z * s
     };
 }
+
+/**
+ * 计算点到线段/直线的垂足
+ * @param {Object} point - 外部点 {x, y, z}
+ * @param {Object} lineFrom - 线段/直线起点 {x, y, z}
+ * @param {Object} lineTo - 线段/直线终点 {x, y, z}
+ * @returns {Object} 垂足坐标 {x, y, z}
+ */
+export function footOfPerpendicular(point, lineFrom, lineTo) {
+    const ab = subtract(lineTo, lineFrom);
+    const ap = subtract(point, lineFrom);
+    const t = dot(ap, ab) / dot(ab, ab);
+    return add(lineFrom, scale(ab, t));
+}

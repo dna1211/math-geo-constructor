@@ -38,6 +38,7 @@ export class Executor {
         this.registerCommand('Fold', { minArgs: 3, maxArgs: 3, handler: this.cmdFold.bind(this) });
         this.registerCommand('Reflect', { minArgs: 2, maxArgs: 2, handler: this.cmdReflect.bind(this) });
         this.registerCommand('Distance', { minArgs: 2, maxArgs: 2, handler: this.cmdDistance.bind(this) });
+        this.registerCommand('Foot', { minArgs: 2, maxArgs: 2, handler: this.cmdFoot.bind(this) });
 
         // 构造类（高级）
         this.registerCommand('RegularPolygon', { minArgs: 4, maxArgs: 4, handler: this.cmdRegularPolygon.bind(this) });
@@ -664,6 +665,37 @@ export class Executor {
         }
         const d = calc.distance(p1.data, p2.data);
         return d;  // 返回数字
+    }
+
+    /** Foot(A, Segment(B,C)) 或 Foot(A, Line(B,C)) — 过点作垂线，返回垂足 */
+    cmdFoot(args) {
+        const [point, line] = args;
+        if (!point?.data) throw new Error('Foot 第一个参数需要是点');
+        if (!line?.data) throw new Error('Foot 第二个参数需要是线段或直线');
+
+        const pointName = point.name;
+        const lineName = line.name;
+
+        // 获取线段/直线端点
+        const from = this.store.get(line.data.from);
+        const to = this.store.get(line.data.to);
+        if (!from || !to) throw new Error('线段端点不存在');
+
+        const result = calc.footOfPerpendicular(point.data, from.data, to.data);
+        return {
+            type: 'point',
+            data: result,
+            parents: [pointName, lineName],
+            compute: (store) => {
+                const p = store.get(pointName);
+                const l = store.get(lineName);
+                if (!p || !l) return null;
+                const f = store.get(l.data.from);
+                const t = store.get(l.data.to);
+                if (!f || !t) return null;
+                return calc.footOfPerpendicular(p.data, f.data, t.data);
+            }
+        };
     }
 
     /** Color(obj, color) */
