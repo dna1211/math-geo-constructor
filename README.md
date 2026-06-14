@@ -184,3 +184,56 @@ D = Foot(A, Segment(B,C))             # 快捷：= Intersect(Perpendicular(...),
 | `Delete` | 删除选中对象 |
 | `Tab` | 自动补全 |
 | `↑/↓` | 翻阅命令历史 |
+
+## 示例：菱形底面棱锥
+
+构造一个底面为菱形的棱锥，包含二面角分析所需的辅助平面。
+
+![菱形棱锥示例](q1.jpg)
+
+```
+---step 菱形顶点---
+A = Point(0, 0, 0)
+B = Point(0.866, -0.5, 0)
+C = Point(0.866, 0.5, 0)
+D = Point(0, 1, 0)
+---step 底面---
+poly1 = Polygon(A, B, C, D)
+---step 菱形对角线---
+segAC = Segment(A, C)
+segBD = Segment(B, D)
+Dash(segAC, true)
+Dash(segBD, true)
+---step 顶点 P（PA⊥底面）---
+P = Point(0, 0, 1)
+---step 棱锥棱边---
+segPA = Segment(P, A)
+segPB = Segment(P, B)
+segPC = Segment(P, C)
+segPD = Segment(P, D)
+---step 点 E (PE:ED=2:1)---
+E = Point(0, 0.667, 0.333)
+---step 辅助连线---
+segAE = Segment(A, E)
+segCE = Segment(C, E)
+segDE = Segment(D, E)
+Dash(segAE, true)
+Dash(segCE, true)
+Dash(segDE, true)
+---step 平面 ACD---
+triACD = Triangle(A, C, D)
+Color(triACD, "#4488ff")
+Opacity(triACD, 0.15)
+---step 平面 ACE（二面角目标）---
+triACE = Triangle(A, C, E)
+Color(triACE, "#ff4444")
+Opacity(triACE, 0.2)
+Color(segAC, "#ff4444")
+---step 标注---
+Label(A, "A")
+Label(B, "B")
+Label(C, "C")
+Label(D, "D")
+Label(P, "P")
+Label(E, "E(PE:ED=2:1)")
+```
