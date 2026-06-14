@@ -1,0 +1,108 @@
+# 解题过程
+
+## 题目
+
+正方形 ABCD 和矩形 ADEF 所在的平面互相垂直，G 是 AF 的中点。
+(1) 求证：DE ⊥ AC；
+(2) 若直线 BE 与平面 ABCD 成 45°，求异面直线 GE 与 AC 所成角的余弦值。
+
+---
+
+## 坐标系
+
+- D 为原点 (0, 0, 0)
+- DA 方向为 X 轴
+- DC 方向为 Y 轴
+- DE 方向为 Z 轴
+
+**依据：** 由于正方形 ABCD 与矩形 ADEF 所在平面互相垂直，且它们有公共边 AD。
+在矩形 ADEF 中，DE ⊥ AD，所以 DE ⊥ 平面 ABCD。
+故可建系使 D 为原点，DA、DC、DE 两两垂直。
+
+设正方形 ABCD 边长为 1。
+
+**各点坐标：**
+| 点 | 坐标 |
+|----|------|
+| D | (0, 0, 0) |
+| A | (1, 0, 0) |
+| B | (1, 1, 0) |
+| C | (0, 1, 0) |
+| E | (0, 0, h)（h = DE，待定）|
+| F | (1, 0, h) |
+| G | (1, 0, h/2)（AF 中点）|
+
+---
+
+## (1) 求证：DE ⊥ AC
+
+**几何法证明：**
+
+∵ 平面 ADEF ⊥ 平面 ABCD，且交线为 AD
+　 DE ⊂ 平面 ADEF，且 DE ⊥ AD（矩形 ADEF 邻边垂直）
+∴ DE ⊥ 平面 ABCD（面面垂直的性质定理）
+
+又 ∵ AC ⊂ 平面 ABCD
+∴ DE ⊥ AC　∎
+
+**向量法验证：**
+
+DE 方向向量：$\vec{DE} = (0, 0, h)$
+AC 方向向量：$\vec{AC} = (-1, 1, 0)$
+
+$\vec{DE} \cdot \vec{AC} = 0 \times (-1) + 0 \times 1 + h \times 0 = 0$
+
+∴ DE ⊥ AC　∎
+
+---
+
+## (2) 求异面直线 GE 与 AC 所成角的余弦值
+
+**第一步：求 DE 的长度**
+
+设正方形 ABCD 边长为 1，DE = h。
+
+- B = (1, 1, 0)
+- E = (0, 0, h)
+- $\vec{BE} = (-1, -1, h)$
+- $|BE| = \sqrt{1+1+h^2} = \sqrt{2+h^2}$
+
+直线 BE 在平面 ABCD 上的投影：B 到 D 的距离（E 的投影是 D）
+$$|BD| = \sqrt{1^2+1^2} = \sqrt{2}$$
+
+设直线 BE 与平面 ABCD 所成角为 θ，则：
+$$\sin\theta = \frac{DE}{|BE|} = \frac{h}{\sqrt{2+h^2}}$$
+
+由 θ = 45°，得：
+$$\frac{h}{\sqrt{2+h^2}} = \frac{\sqrt{2}}{2}$$
+
+平方化简：
+$$\frac{h^2}{2+h^2} = \frac{1}{2}$$
+$$2h^2 = 2 + h^2$$
+$$h^2 = 2 \Rightarrow h = \sqrt{2}$$
+
+**所以 DE = √2 ≈ 1.414**
+
+**第二步：求异面直线 GE 与 AC 所成角**
+
+此时：
+- G = (1, 0, √2/2)
+- E = (0, 0, √2)
+- A = (1, 0, 0)
+- C = (0, 1, 0)
+
+方向向量：
+$$\vec{GE} = E - G = (-1,\ 0,\ \frac{\sqrt{2}}{2})$$
+$$\vec{AC} = C - A = (-1,\ 1,\ 0)$$
+
+点积：
+$$\vec{GE} \cdot \vec{AC} = (-1)(-1) + 0 \times 1 + \frac{\sqrt{2}}{2} \times 0 = 1$$
+
+模长：
+$$|\vec{GE}| = \sqrt{1 + 0 + \frac{1}{2}} = \sqrt{\frac{3}{2}} = \frac{\sqrt{6}}{2}$$
+$$|\vec{AC}| = \sqrt{1+1+0} = \sqrt{2}$$
+
+设所成角为 α（取锐角或直角）：
+$$\cos\alpha = \frac{|\vec{GE} \cdot \vec{AC}|}{|\vec{GE}| \cdot |\vec{AC}|} = \frac{1}{\frac{\sqrt{6}}{2} \cdot \sqrt{2}} = \frac{1}{\frac{\sqrt{12}}{2}} = \frac{2}{2\sqrt{3}} = \frac{\sqrt{3}}{3}$$
+
+**答：异面直线 GE 与 AC 所成角的余弦值为 $\dfrac{\sqrt{3}}{3}$**
